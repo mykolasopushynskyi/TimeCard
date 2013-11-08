@@ -1,103 +1,90 @@
 package controllers;
 
-import java.util.Calendar;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Date;
-import java.util.TimeZone;
 
+import play.Play;
 import play.libs.WS;
 import play.libs.WS.WSRequest;
 import play.mvc.Controller;
+import play.utils.Properties;
 
+import com.google.gson.JsonObject;
 import com.ning.http.util.Base64;
 
 public class RallyService extends Controller {
 
 	private final static String RALLY_URL = "https://rally1.rallydev.com/slm/webservice/v2.0/";
-	private final static String USER = "ololo";
-	private final static String PASSWORD = "ololo";
 
-	private String password = PASSWORD;
-	private String login = USER;
-	private String url = RALLY_URL;
-
-	// TODO dont delete
-	public static void example() {
-		WS.HttpResponse user = sendRequest(RALLY_URL + "user.js?fetch=true");
-
-		String userId = user.getJson().getAsJsonObject().get("User")
-				.getAsJsonObject().get("ObjectID").toString();
-
-		String userLastName = user.getJson().getAsJsonObject().get("User")
-				.getAsJsonObject().get("LastName").toString();
-
-		WS.HttpResponse project = getProjectId(userId);
-
-		String projectId = project.getJson().getAsJsonObject()
-				.get("QueryResult").getAsJsonObject().get("Results")
-				.getAsJsonArray().get(0).getAsJsonObject().get("ObjectID")
-				.toString();
-
-		WS.HttpResponse currentIteration = getCurrentIteration(projectId);
-
-		String iterationId = currentIteration.getJson().getAsJsonObject()
-				.get("QueryResult").getAsJsonObject().get("Results")
-				.getAsJsonArray().get(0).getAsJsonObject().get("ObjectID")
-				.toString();
-
-		String iterationName = currentIteration.getJson().getAsJsonObject()
-				.get("QueryResult").getAsJsonObject().get("Results")
-				.getAsJsonArray().get(0).getAsJsonObject().get("Name")
-				.toString();
-
-		String iterationNumber;
-
-		System.out.println("u" + userId);
-		System.out.println("u" + userLastName);
-		System.out.println("p" + projectId);
-		System.out.println("i" + iterationId);
-		System.out.println("i" + iterationName);
-
-		for (String s : iterationName.split(" ")) {
-			try {
-				Integer.parseInt(s);
-				iterationNumber = s;
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-			}
-		}
-
-		WS.HttpResponse userStories = getUserStrories(projectId, iterationId);
-
-		renderJSON(userStories.getJson());
-
-		// https://rally1.rallydev.com/slm/webservice/v2.0/artifact?key=61741e3c-df9b-4e9b-9b0d-7bd3abc065aa&query=(FormattedID%20=%20US6149)
-
-		/*
-		 * String auth = "Basic " + Base64.encode((USER + ":" +
-		 * PASSWORD).getBytes());
-		 * 
-		 * WSRequest req = WS.url(RALLY_URL+
-		 * "artifact?&query=(FormattedID%20=%20US6149)");
-		 * req.setHeader("Authorization", auth);
-		 * 
-		 * renderJSON(req.get().getJson());
-		 */
+	public static void example(String id) {
+		renderJSON(getInfo(id));
 	}
 
-	private static WS.HttpResponse getUserStoryList(String currentProjectId) {
+	private static String getInfo(String formattedId) {
+		String query = "null";
+		JsonObject result = new JsonObject();
+		
+		if (formattedId.matches("^((us)|(US))[0-9]+$")) {
+			query = "hierarchicalrequirement?fetch=true&query=(FormattedId = "
+					+ formattedId + ")";
+		}
+		if (formattedId.matches("^((de)|(DE))[0-9]+$")) {
+			query = "defect?fetch=true&query=(FormattedId = " + formattedId
+					+ ")";
+		}
+		
 
-		// WS.HttpResponse userStories = getUserStrories(currentProjectId);
+		if (!"null".equals(query)) {
+			WS.HttpResponse defect = sendRequest(RALLY_URL + query);
 
-		/*
-		 * var list = new Array(); list.push(NO_STORY_STR); for (var i=0;
-		 * i<userStories.length; i++) { list.push("" +
-		 * userStories[i].FormattedID + " " + userStories[i].Name); }
-		 * 
-		 * return list;
-		 */
+			try {
+				JsonObject fullUS = defect.getJson().getAsJsonObject()
+						.get("QueryResult").getAsJsonObject().get("Results")
+						.getAsJsonArray().get(0).getAsJsonObject();
+
+				result.addProperty("FormattedID", fullUS.get("FormattedID")
+						.getAsString());
+				result.addProperty("Name", fullUS.get("Name").getAsString());
+
+			} catch (Exception ex) {
+				result.addProperty("FormattedID", "Error");
+				result.addProperty("Name", "Can't find user story or defect!!!");
+			}
+			
+		} else {
+			result.addProperty("FormattedID", "Error");
+			result.addProperty("Name", "Can't find user story or defect!!!");
+		}
+
+		return result.toString();
+	}
+
+	private static WS.HttpResponse sendRequest(String url) {
+		Properties prop = new Properties();
+
+		// get username and password
+		try {
+			prop.load(Play.classloader.getResourceAsStream("pass.conf"));
+			String user = prop.get("user");
+			String pass = prop.get("password");
+
+			String auth = "Basic "
+					+ Base64.encode((user + ":" + pass).getBytes());
+
+			WSRequest req = WS.url(url);
+			req.setHeader("Authorization", auth);
+
+			return req.get();
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
 		return null;
-	};
-
+	}
+	
+	
+/*
 	private static WS.HttpResponse getUserStrories(String currentProjectId,
 			String currentIterationtId) {
 		String query = "artifact?fetch=true&query=(Project.Objectid = "
@@ -105,16 +92,6 @@ public class RallyService extends Controller {
 		System.out.println(RALLY_URL + query);
 		WS.HttpResponse userstories = sendRequest(RALLY_URL + query);
 		return userstories;
-	}
-
-	private static WS.HttpResponse sendRequest(String url) {
-		String auth = "Basic "
-				+ Base64.encode((USER + ":" + PASSWORD).getBytes());
-
-		WSRequest req = WS.url(url);
-		req.setHeader("Authorization", auth);
-
-		return req.get();
 	}
 
 	private static WS.HttpResponse getProjectId(String userId) {
@@ -141,5 +118,6 @@ public class RallyService extends Controller {
 		WS.HttpResponse iteration = sendRequest(RALLY_URL + query);
 		return iteration;
 	};
+	*/
 
 }
