@@ -1,0 +1,11 @@
+.classpath
+.project
+.settings
+.class
+eclipse
+test-result
+tmp
+lib
+logs
+modules
+
