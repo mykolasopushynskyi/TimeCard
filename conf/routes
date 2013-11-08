@@ -1,0 +1,31 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                                       Application.index
+
+# Json data
+GET     /getTeamList                            Application.getTeamList
+GET     /getStories                             Application.getUserStories
+
+
+
+# Ignore favicon requests
+GET     /favicon.ico                            404
+
+# Map static resources from the /app/public folder to the /public path
+GET     /public/                                staticDir:public
+
+
+# Catch all
+
+ GET			/ex				RallyService.example
+ 
+ GET			/login			Security.tryAuthGoogle
+ GET			/auth			Security.authGoogle
+ POST			/login          Security.tryAuthGoogle
+ GET			/logout         Security.logout
+ POST			/logout         Security.logout
+
+ *       /{controller}/{action}                 {controller}.{action}

@@ -1,0 +1,288 @@
+#{extends 'main.html' /} #{set title:'Team Reports' /} #{if isLogged}
+
+<div id="header">
+	<div class="logo">
+		<img
+			src="https://www.globallogic.com/wp-content/themes/globallogic/img/logo.png"
+			width="106" height="18" alt="GlobalLogic logo" />
+	</div>
+	<div class="logininfo">
+		<a class="blue" href="@{Security.logout}">${email} X</a>
+	</div>
+</div>
+
+<div id="leftcolumn">
+	<h1>TeamList</h1>
+
+	<ul data-bind="foreach: teamList">
+		<li
+			data-bind="text: name, css: { selected: $root.chosenTeam() && name == $root.chosenTeam().name }, click: $root.chosenTeam">
+		</li>
+	</ul>
+</div>
+
+<div id="content">
+	<h1>Options</h1>
+
+	<form id="mainform" method="post" action="saveData">
+
+		<p class="frm">
+
+			<select class="selector" data-bind="foreach: storyList">
+				<option data-bind="text: id + ' ' + desc "></option>
+			</select> <input id="opener" class="button" type="button"
+				value="Find user story" />
+		</p>
+
+		<table data-bind="foreach: reportEntries">
+			<tr>
+				<td data-bind="text: description"></td>
+				<td><input data-bind="value: $root.chosenTeam().report[name]"
+					type="text" /></td>
+			</tr>
+		</table>
+
+		<div class="buttons">
+			<input data-bind="click: clearFields" class="button" type="button"
+				value="Clear All" /> <input class="button" name="save"
+				type="submit" value="Save" />
+		</div>
+	</form>
+
+	<div id="dialog-modal" title="Enter user story id">
+		<label for="storyID">User story id</label> <input type="text"
+			name="storyID" id="storyID"
+			class="text ui-widget-content ui-corner-all" />
+
+		<p class="validateTips">All form fields are required.</p>
+	</div>
+
+	<!--********************************************************-->
+	<script type="text/javascript" charset="${_response_encoding}">
+		var createReportEntry = function(name, description) {
+			return {
+				name : name,
+				description : description
+			}
+		}
+
+		var reportEntries = [
+				createReportEntry("storyTime", "Story Time"),
+				createReportEntry("bugFixes", "Bug Fixes"),
+				createReportEntry("liveBugFixes", "Live Bug Fixes"),
+				createReportEntry("sickLeave", "Sick Leave"),
+				createReportEntry("vacation", "Vacation"),
+				createReportEntry("standUp", "Stand Up"),
+				createReportEntry("demo", "Demo"),
+				createReportEntry("estimates", "Estimates"),
+				createReportEntry("retrospective", "Retrospective"),
+				createReportEntry("trainingAndDevelopment",
+						"Training And Development"),
+				createReportEntry("projectPlanning", "Project Planning"),
+				createReportEntry("investigation", "Investigation"),
+				createReportEntry("projectMeetings", "Project Meetings"),
+				createReportEntry("enhancements", "Enhancements"),
+				createReportEntry("assistance", "Assistance"),
+				createReportEntry("office", "Office"),
+				createReportEntry("moveManagement", "Move Management") ];
+
+		var createReportModel = function(entries) {
+			var result = {};
+
+			for ( var i in entries) {
+				result[entries[i].name] = ko.observable("");
+			}
+			return result;
+
+		}
+
+		var createTeamModel = function(name) {
+			return {
+				name : name,
+				report : createReportModel(reportEntries)
+			};
+		}
+
+		var toKoTeamModel = function(teams) {
+			var teamModels = [];
+			for ( var index in teams) {
+				teamModels.push(createTeamModel(teams[index]));
+			}
+			return teamModels;
+		}
+
+		var TeamListModel = function() {
+			var self = this;
+
+			self.teamList = ko.observable([]);
+			self.storyList = ko.observable([]);
+
+			self.chosenTeam = ko.observable(createTeamModel());
+			self.chosenStory = ko.observable({});
+
+			//get teamlist
+			$.getJSON("@{Application.getTeamList()}", function(data) {
+				self.teamList(toKoTeamModel(data));
+
+				if (self.teamList() && self.teamList().length) {
+					self.chosenTeam(self.teamList()[0]);
+				}
+			});
+
+			//get teamlist
+			$.getJSON("@{Application.getUserStories()}", function(data) {
+				self.storyList(data);
+				if (self.storyList() && self.storyList().length) {
+					self.chosenStory(self.storyList()[0]);
+				}
+			});
+
+			self.arr = ko.computed(function() {
+				var result = [];
+				for ( var i in self.storyList().length) {
+					result.push(self.storyList()[i].name);
+				}
+				return result;
+			});
+
+			//JS dialog to find user story from rally
+			$(function() {
+				var storyID = $("#storyID"), allFields = $([]).add(storyID), tips = $(".validateTips");
+
+				function updateTips(t) {
+					tips.text(t).addClass("ui-state-highlight");
+					setTimeout(function() {
+						tips.removeClass("ui-state-highlight", 1500);
+					}, 500);
+				}
+
+				function checkLength(o, n, min, max) {
+					if (o.val().length > max || o.val().length < min) {
+						o.addClass("ui-state-error");
+						updateTips("Length of " + n + " must be between " + min
+								+ " and " + max + ".");
+						return false;
+					} else {
+						return true;
+					}
+				}
+
+				function checkRegexp(o, regexp, n) {
+					if (!(regexp.test(o.val()))) {
+						o.addClass("ui-state-error");
+						updateTips(n);
+						return false;
+					} else {
+						return true;
+					}
+				}
+
+				$("#dialog-modal")
+						.dialog(
+								{
+									autoOpen : false,
+									height : 250,
+									width : 400,
+									resizable : false,
+									modal : true,
+									buttons : {
+										"Ok" : function() {
+											var isValid = true;
+											allFields
+													.removeClass("ui-state-error");
+											isValid = isValid
+													&& checkLength(storyID,
+															"userstory id", 3, 15);
+											isValid = isValid
+													&& checkRegexp(
+															storyID,
+															/^((DE)|(US))([0-9])+$/i,
+															"Userstory id must begin from US or DE and ends with id number.");
+
+											if(isValid)
+											{
+												var link = "@{RallyService.example}";
+												
+												$.getJSON(link, function(data) {
+													console.log(data);
+												});
+											}
+										},
+										"Cancel" : function() {
+											$(this).dialog("close");
+										}
+									},
+									close : function() {
+										allFields.val("").removeClass(
+												"ui-state-error");
+									}
+								});
+				$("#opener").click(function() {
+					$("#dialog-modal").dialog("open");
+				});
+			});
+
+			//method work correctly
+			self.clearFields = function() {
+				var rep = self.chosenTeam().report;
+
+				for ( var param in rep) {
+					if (rep.hasOwnProperty(param)) {
+						rep[param]("");
+					}
+				}
+			}
+		};
+
+		var model = new TeamListModel()
+		ko.applyBindings(model);
+	</script>
+	<!--********************************************************-->
+
+	<div id="footer">
+		<div class="logo">
+			<img
+				src="https://www.globallogic.com/wp-content/themes/globallogic/img/logo.png"
+				width="106" height="18" alt="GlobalLogic logo" />
+		</div>
+		<div class="info">2013 year.</div>
+	</div>
+</div>
+#{/if} #{else}
+
+<div id="header">
+	<div class="logo">
+		<img
+			src="https://www.globallogic.com/wp-content/themes/globallogic/img/logo.png"
+			width="106" height="18" alt="GlobalLogic logo" />
+	</div>
+</div>
+
+<div id="leftcolumn">
+	<h1>Please Login</h1>
+</div>
+
+<div id="content">
+	<h1>Please login</h1>
+
+	<div class="login">
+		<table>
+			<tr>
+				<td><img
+					src="https://ssl.gstatic.com/ui/v1/icons/mail/logo_white.png" /></td>
+				<td><a class="blue" href="@{Security.tryAuthGoogle}">Login
+						with google</a></td>
+			</tr>
+		</table>
+	</div>
+
+	<div id="footer">
+		<div class="logo">
+			<img
+				src="https://www.globallogic.com/wp-content/themes/globallogic/img/logo.png"
+				width="106" height="18" alt="GlobalLogic logo" />
+		</div>
+		<div class="info">2013 year.</div>
+	</div>
+</div>
+#{/else}

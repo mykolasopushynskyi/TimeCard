@@ -1,0 +1,38 @@
+Team(Polaris):
+    name: Polaris
+
+Team(Dendy):
+    name: Dendy
+    
+Team(Nintendo):
+    name: Nintendo
+    
+Team(Atari):
+    name: Atary
+
+Team(Arctur):
+    name: Arctur
+
+UserStory(a):
+    userStoryID: "0001"
+    userStoryDesc: "make initial project"
+
+UserStory(b):
+    userStoryID: "0002"
+    userStoryDesc: "make html template & css styles"
+
+UserStory(c):
+    userStoryID: "0003"
+    userStoryDesc: "Add google loggining"
+
+UserStory(d):
+    userStoryID: "0004"
+    userStoryDesc: "Add knockout models to UI"
+
+UserStory(e):
+    userStoryID: "0005"
+    userStoryDesc: "Add db connection & data stored"
+
+UserStory(f):
+    userStoryID: "0006"
+    userStoryDesc: "Add js dialog to find userstory"
