@@ -8,13 +8,11 @@ import play.db.jpa.*;
 @Entity
 public class Report extends Model {
 
-    @Column
 	public int storyTime;
 
-    @Column
 	public int bugFixed;
 
-    //TODO Add more fields (17 fields must be)
+	// TODO Add more fields (17 fields must be)
 
 	@ManyToOne
 	public User author;
