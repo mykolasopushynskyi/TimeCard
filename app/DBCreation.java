@@ -1,3 +1,5 @@
+import models.Team;
+import models.User;
 import play.jobs.Job;
 import play.jobs.OnApplicationStart;
 import play.jobs.OnApplicationStop;
@@ -17,14 +19,13 @@ public class DBCreation {
         public void doJob() {
            Fixtures.loadModels("initial-data.yml");
         }
-
     }
 
     @OnApplicationStop
     public class End extends Job {
 
         public void doJob() {
-            Fixtures.deleteAllModels();
+        	Fixtures.deleteAllModels();//.deleteAll();
         }
 
     }

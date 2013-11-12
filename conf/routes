@@ -6,8 +6,8 @@
 GET     /                                       Application.index
 
 # Json data
-GET     /getTeamList                            Application.getTeamList
-GET     /getStories                             Application.getUserStories
+GET     /getTeamList                            DBManager.getTeamList
+GET     /getStories                             DBManager.getUserStories
 
 
 

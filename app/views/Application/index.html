@@ -16,7 +16,7 @@
 
 	<ul data-bind="foreach: teamList">
 		<li
-			data-bind="text: name, css: { selected: $root.chosenTeam() && name == $root.chosenTeam().name }, click: $root.chosenTeam">
+			data-bind="text: name, css: { selected: $root.chosenTeam() && name == $root.chosenTeam().name }, click: $root.chooseTeam">
 		</li>
 	</ul>
 </div>
@@ -54,7 +54,10 @@
 			name="storyID" id="storyID"
 			class="text ui-widget-content ui-corner-all" />
 
-		<div id="loader"><img src="http://www.gargash.ae/wp-content/themes/gargash/images/spinner.gif"/></div>
+		<div id="loader">
+			<img
+				src="http://www.gargash.ae/wp-content/themes/gargash/images/spinner.gif" />
+		</div>
 		<p class="validateTips">All form fields are required.</p>
 	</div>
 
@@ -120,23 +123,31 @@
 
 			self.chosenTeam = ko.observable(createTeamModel());
 			self.chosenStory = ko.observable({});
-
+			
 			//get teamlist
-			$.getJSON("@{Application.getTeamList()}", function(data) {
-				self.teamList(toKoTeamModel(data));
-
-				if (self.teamList() && self.teamList().length) {
-					self.chosenTeam(self.teamList()[0]);
-				}
-			});
-
+			self.updateTeamList = function(){			
+				$.getJSON("@{DBManager.getTeamList()}", function(data) {
+					self.teamList(toKoTeamModel(data));
+	
+					if (self.teamList() && self.teamList().length) {
+						self.chosenTeam(self.teamList()[0]);
+					}
+					self.updateUSList();
+				});
+			}
+			
 			//get teamlist
-			$.getJSON("@{Application.getUserStories()}", function(data) {
-				self.storyList(data);
-				if (self.storyList() && self.storyList().length) {
-					self.chosenStory(self.storyList()[0]);
-				}
-			});
+			self.updateUSList  = function(){			
+				$.getJSON("@{DBManager.getUserStories()}?team=" + self.chosenTeam().name, function(data) {
+					self.storyList(data);
+					if (self.storyList() && self.storyList().length) {
+						self.chosenStory(self.storyList()[0]);
+					}
+				});
+			}
+			
+			self.updateTeamList();
+			//self.updateUSList();
 
 			self.arr = ko.computed(function() {
 				var result = [];
@@ -156,10 +167,17 @@
 				}
 			}
 			
+			//set new team and refresh US list
+			self.chooseTeam = function(teamModel) {
+				////self.chosenTeam
+				self.chosenTeam(teamModel);
+				self.updateUSList();
+			}
+			
 			//JS dialog to find user story from rally
 			$(function() {
 				var storyID = $("#storyID"), allFields = $([]).add(storyID), tips = $(".validateTips");
-				var isSuccessfulFind = false;
+			//	var isSuccessfulFind = false;
 				var findedTask;
 
 				function updateTips(t) {
@@ -218,13 +236,23 @@
 									resizable : false,
 									modal : true,
 									buttons : {
-										"Ok" : function() {
-											if (isSuccessfulFind) {
-												//TODO Add code for adding User Story to 
-												//selector and view model 
-											}else{
-												updateTips("There is nothing to add.");
-											}
+										"Ok" : function() {											
+											var link = "@{DBManager.updateUserStory}?id="
+												+ findedTask.FormattedID + 
+												"&desc=" + findedTask.Name + 
+												"&team=" + self.chosenTeam().name;
+
+											$.ajax({
+											 	url: link,
+											 	context: document.body,
+											 	beforeSend: function() {
+													showLoading(true);
+												}
+											}).done(function(data) {
+												showLoading(false);
+												self.updateUSList();
+												$("#dialog-modal").dialog("close");
+											});
 										},
 										"Find" : function() {
 											var isValid = true;
@@ -255,10 +283,8 @@
 														updateTips(data.Name);
 														findedTask = data;
 														if (data.FormattedID != "Error"){
-															isSuccessfulFind = true;
 															updateOk(false);
 														}else{
-															isSuccessfulFind = false;
 															storyID.addClass("ui-state-error");
 															updateOk(true);
 														}
@@ -269,24 +295,22 @@
 											$(this).dialog("close");
 										}
 									},
-									
 									close : function() {
-										isSuccessfulFind = false;
 										findedTask = null;
-										
 										updateOk(true);
 										updateTips("");
+										showLoading(false);
 										allFields.val("").removeClass(
 												"ui-state-error");
 									}
 								});
 				updateOk(true);
-				$('#loader').hide();
 				
 				$("#opener").click(function() {
 					$("#dialog-modal").dialog("open");
 				});
 				
+				$('#loader').hide();
 
 					
 			});

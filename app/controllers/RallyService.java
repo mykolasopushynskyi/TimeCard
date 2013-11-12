@@ -33,7 +33,6 @@ public class RallyService extends Controller {
 			query = "defect?fetch=true&query=(FormattedId = " + formattedId
 					+ ")";
 		}
-		
 
 		if (!"null".equals(query)) {
 			WS.HttpResponse defect = sendRequest(RALLY_URL + query);
@@ -54,7 +53,6 @@ public class RallyService extends Controller {
 			
 		} else {
 			result.addProperty("FormattedID", "Error");
-			result.addProperty("Name", "Can't find user story or defect!!!");
 		}
 
 		return result.toString();
@@ -82,42 +80,4 @@ public class RallyService extends Controller {
 		}
 		return null;
 	}
-	
-	
-/*
-	private static WS.HttpResponse getUserStrories(String currentProjectId,
-			String currentIterationtId) {
-		String query = "artifact?fetch=true&query=(Project.Objectid = "
-				+ currentProjectId + ")";
-		System.out.println(RALLY_URL + query);
-		WS.HttpResponse userstories = sendRequest(RALLY_URL + query);
-		return userstories;
-	}
-
-	private static WS.HttpResponse getProjectId(String userId) {
-
-		String query = "project?fetch=true&query=(TeamMembers.ObjectID = "
-				+ userId + ")";
-		System.out.println(RALLY_URL + query);
-		WS.HttpResponse project = sendRequest(RALLY_URL + query);
-		return project;
-	};
-
-	private static String getCurrentDate() {
-		Date date = new Date();
-		// date.
-		return (date.getYear() + 1900) + "-" + (date.getMonth() + 1) + "-"
-				+ date.getDate() + "T00:00:00.000Z";
-	};
-
-	private static WS.HttpResponse getCurrentIteration(String projectId) {
-		String query = "iteration?fetch=true&query=(((endDate >= "
-				+ getCurrentDate() + ") and (startDate <= " + getCurrentDate()
-				+ ")) and (project.objectid = " + projectId + "))";
-		System.out.println(RALLY_URL + query);
-		WS.HttpResponse iteration = sendRequest(RALLY_URL + query);
-		return iteration;
-	};
-	*/
-
 }
