@@ -39,6 +39,19 @@
 	padding: 10px;
 }
 
+#content .errMessage{
+	width: 50%;
+	margin: 0 auto;
+	border: 1px solid;
+	padding:10px;
+	color: #9F6000;
+	background-color: #FEEFB3;
+}
+
+#content .errorField {
+	background-color: #885555;
+}
+
 #content input {
 	height: 30px;
 	border: 0;

@@ -27,26 +27,39 @@
 	<form id="mainform" method="post" action="saveData">
 
 		<p class="frm">
-
-			<select class="selector" data-bind="foreach: storyList">
-				<option data-bind="text: id + ' ' + desc "></option>
-			</select> <input id="opener" class="button" type="button"
+			<select class="selector" data-bind="options: $root.chosenTeam().storyList(), optionsText: 
+			function(item)
+			{
+				return item.id + ' ' + item.desc;
+			},
+			value: $root.chosenTeam().story
+			"/></select>
+			<input id="opener" class="button" type="button"
 				value="Find user story" />
 		</p>
 
 		<table data-bind="foreach: reportEntries">
 			<tr>
 				<td data-bind="text: description"></td>
-				<td><input data-bind="value: $root.chosenTeam().report[name]"
+				<td><input data-bind="value: $root.chosenTeam().report[name], 
+					css: { errorField: isNotValid($root.chosenTeam().report[name]())}"
 					type="text" /></td>
 			</tr>
 		</table>
-
+		
+		<!--  div class="buttons">
+			<p data-bind="text: $root.summaryValid()" class="errMessage"></p>
+		</div-->
+		
+		<div data-bind="text: $root.summaryValid()" class="errMessage"></div>
+		
 		<div class="buttons">
 			<input data-bind="click: clearFields" class="button" type="button"
 				value="Clear All" /> <input class="button" name="save"
-				type="submit" value="Save" />
+				type="button" value="Save" />
 		</div>
+		
+		<!--  p data-bind="text: $root.summaryValid()" class="errMessage"></p>-->
 	</form>
 
 	<div id="dialog-modal" title="Enter user story id">
@@ -63,6 +76,16 @@
 
 	<!--********************************************************-->
 	<script type="text/javascript" charset="${_response_encoding}">
+		
+		var isNotValid = function(value) {
+			var isValid = true;
+			if(value != ""){
+				var reg = /^\d{0,2}(\.\d{0,2}){0,1}$/;
+				isValid = isValid && reg.test(value) && parseFloat(value) >= 0 && parseFloat(value) <= 24;
+			}
+			return !isValid;
+		}
+	
 		var createReportEntry = function(name, description) {
 			return {
 				name : name,
@@ -72,23 +95,24 @@
 
 		var reportEntries = [
 				createReportEntry("storyTime", "Story Time"),
-				createReportEntry("bugFixes", "Bug Fixes"),
-				createReportEntry("liveBugFixes", "Live Bug Fixes"),
+				createReportEntry("rework", "Rework"),
+				createReportEntry("maintenance", "Maintenance"),
+				
+				createReportEntry("unplannedActivity", "Unplanned Activity"),
 				createReportEntry("sickLeave", "Sick Leave"),
 				createReportEntry("vacation", "Vacation"),
+				
 				createReportEntry("standUp", "Stand Up"),
-				createReportEntry("demo", "Demo"),
-				createReportEntry("estimates", "Estimates"),
 				createReportEntry("retrospective", "Retrospective"),
+				createReportEntry("projectPlanning", "Project Planning"),
+				
+ 				createReportEntry("demo", "Demo"), 
+				createReportEntry("estimates", "Estimates"),
+				createReportEntry("projectMeetings", "Project Meetings"),
+				
 				createReportEntry("trainingAndDevelopment",
 						"Training And Development"),
-				createReportEntry("projectPlanning", "Project Planning"),
-				createReportEntry("investigation", "Investigation"),
-				createReportEntry("projectMeetings", "Project Meetings"),
-				createReportEntry("enhancements", "Enhancements"),
-				createReportEntry("assistance", "Assistance"),
-				createReportEntry("office", "Office"),
-				createReportEntry("moveManagement", "Move Management") ];
+				createReportEntry("management", "Management") ];
 
 		var createReportModel = function(entries) {
 			var result = {};
@@ -103,6 +127,8 @@
 		var createTeamModel = function(name) {
 			return {
 				name : name,
+				storyList : ko.observable([]),
+				story: ko.observable({}),
 				report : createReportModel(reportEntries)
 			};
 		}
@@ -119,11 +145,44 @@
 			var self = this;
 
 			self.teamList = ko.observable([]);
-			self.storyList = ko.observable([]);
-
 			self.chosenTeam = ko.observable(createTeamModel());
-			self.chosenStory = ko.observable({});
-			
+
+			self.summaryValid = ko.computed( function(){
+				var rep = self.chosenTeam().report;
+				var isValid = true;
+				
+				for(i in rep)
+					isValid = isValid && !isNotValid(rep[i]());
+				
+
+				
+				
+				var sum = 0;
+				var x = 0;
+				
+				for(i in rep){
+					x = parseFloat(rep[i]());
+					if(!isNaN(x))
+						sum += x;
+				}
+				if(!isValid){
+					$(".errMessage").show();
+					return "Not all fiels is valid!";
+				}
+				if(sum > 24){
+					$(".errMessage").show();
+					return sum + " hours spended. You cant work more than 24 hours.";
+				}
+				else if(sum < 8 && sum != 0){
+					$(".errMessage").show();
+					return sum +" hours spended. You need more work.";
+				}
+				else{
+					$(".errMessage").hide();
+				}
+				
+			});
+
 			//get teamlist
 			self.updateTeamList = function(){			
 				$.getJSON("@{DBManager.getTeamList()}", function(data) {
@@ -137,25 +196,27 @@
 			}
 			
 			//get teamlist
-			self.updateUSList  = function(){			
+			self.updateUSList  = function(id){
+				//console.log(self.chosenTeam().story());
 				$.getJSON("@{DBManager.getUserStories()}?team=" + self.chosenTeam().name, function(data) {
-					self.storyList(data);
-					if (self.storyList() && self.storyList().length) {
-						self.chosenStory(self.storyList()[0]);
+					if(self.chosenTeam().story()){
+						self.chosenTeam().storyList(data);
+						
+						for(var i=0; i < self.chosenTeam().storyList().length; i++){
+							if(self.chosenTeam().storyList()[i].id == id)
+							{
+								self.chosenTeam().story(self.chosenTeam().storyList()[i]);
+								break;
+							}
+						}
+					}
+					else{
+						self.chosenTeam().storyList(data);
 					}
 				});
 			}
 			
 			self.updateTeamList();
-			//self.updateUSList();
-
-			self.arr = ko.computed(function() {
-				var result = [];
-				for ( var i in self.storyList().length) {
-					result.push(self.storyList()[i].name);
-				}
-				return result;
-			});
 
 			self.clearFields = function() {
 				var rep = self.chosenTeam().report;
@@ -169,15 +230,16 @@
 			
 			//set new team and refresh US list
 			self.chooseTeam = function(teamModel) {
-				////self.chosenTeam
+
+				//kostyl'
+				var id = teamModel.story().id;
 				self.chosenTeam(teamModel);
-				self.updateUSList();
+				self.updateUSList(id);
 			}
 			
 			//JS dialog to find user story from rally
 			$(function() {
 				var storyID = $("#storyID"), allFields = $([]).add(storyID), tips = $(".validateTips");
-			//	var isSuccessfulFind = false;
 				var findedTask;
 
 				function updateTips(t) {
@@ -311,10 +373,7 @@
 				});
 				
 				$('#loader').hide();
-
-					
 			});
-
 		};
 
 		var model = new TeamListModel()
