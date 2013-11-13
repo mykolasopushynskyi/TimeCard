@@ -51,8 +51,8 @@ public class DBManager extends Controller {
 			for (TeamTask t : tasks) {
 
 				if (t.updatedDate.after(twoWeeksAgo)) {
-					task.addProperty("id", t.task.taskId);
-					task.addProperty("desc", t.task.description);
+					task.addProperty("id", t.id.task.taskId);
+					task.addProperty("desc", t.id.task.description);
 					data.add(task);
 					task = new JsonObject();
 				}
@@ -84,8 +84,8 @@ public class DBManager extends Controller {
 		TeamTask teamTask;
 		if (result.size() == 0) {
 			teamTask = new TeamTask();
-			teamTask.team = Team.findById(currentTeam.id);
-			teamTask.task = Task.findById(id);
+			teamTask.id.team = Team.findById(currentTeam.id);
+			teamTask.id.task = Task.findById(id);
 		} else {
 			teamTask = result.get(0);
 			teamTask.updatedDate = new Date();
