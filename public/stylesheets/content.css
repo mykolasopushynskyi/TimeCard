@@ -40,11 +40,15 @@
 }
 
 #content .errMessage{
-	width: 50%;
-	margin: 0 auto;
+	width: 25%;
+	/*margin: 0 auto;*/
 	border: 1px solid;
 	padding:10px;
+	margin-right:40px;
+	margin-top:10px;
+	
 	color: #9F6000;
+	float:right;
 	background-color: #FEEFB3;
 }
 
@@ -98,7 +102,7 @@
 #content .buttons {
 	display: table;
 	margin: 0 auto;
-	width: 50%;
+	width: 51%;
 }
 
 #content .button {
@@ -119,6 +123,14 @@
 	padding-left: 4px;
 }
 
+#content .button:disabled {
+	background: #555555;
+}
+#content .button:disabled:hover {
+	color: rgba(255, 255, 255, 0.6);
+	border-left-color: rgba(255, 255, 255, 0.6);
+	background: #555555;
+}
 #content .button:hover {
 	color: #ffffff;
 	border-left-color: #ffffff;

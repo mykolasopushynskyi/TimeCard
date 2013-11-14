@@ -27,39 +27,45 @@
 	<form id="mainform" method="post" action="saveData">
 
 		<p class="frm">
-			<select class="selector" data-bind="options: $root.chosenTeam().storyList(), optionsText: 
+			<select class="selector"
+				data-bind="options: $root.chosenTeam().storyList(), optionsText: 
 			function(item)
 			{
 				return item.id + ' ' + item.desc;
 			},
 			value: $root.chosenTeam().story
-			"/></select>
+			" /></select>
 			<input id="opener" class="button" type="button"
 				value="Find user story" />
 		</p>
+		<div>
+			<table data-bind="foreach: reportEntries" style="float:left">
+				<tr>
+					<td data-bind="text: description"></td>
+					<td><input
+						data-bind="value: $root.chosenTeam().report[name], 
+						css: { errorField: isNotValid($root.chosenTeam().report[name]())}"
+						type="text" /></td>
+				</tr>
+			</table>
+			<div data-bind="text: $root.summaryValid()" class="errMessage"></div>
+		</div>
 
-		<table data-bind="foreach: reportEntries">
-			<tr>
-				<td data-bind="text: description"></td>
-				<td><input data-bind="value: $root.chosenTeam().report[name], 
-					css: { errorField: isNotValid($root.chosenTeam().report[name]())}"
-					type="text" /></td>
-			</tr>
-		</table>
-		
-		<!--  div class="buttons">
-			<p data-bind="text: $root.summaryValid()" class="errMessage"></p>
-		</div-->
-		
-		<div data-bind="text: $root.summaryValid()" class="errMessage"></div>
-		
+
+		<!--  div data-bind="text: $root.summaryValid()" class="errMessage"></div>-->
+
 		<div class="buttons">
 			<input data-bind="click: clearFields" class="button" type="button"
-				value="Clear All" /> <input class="button" name="save"
+				value="Clear All" /> <input
+				data-bind="click: saveReport, enable: isValid" class="button"
 				type="button" value="Save" />
+			<div id="reportLoader" style="float: right">
+				<img
+					src="http://www.gargash.ae/wp-content/themes/gargash/images/spinner.gif" />
+			</div>
+
 		</div>
-		
-		<!--  p data-bind="text: $root.summaryValid()" class="errMessage"></p>-->
+
 	</form>
 
 	<div id="dialog-modal" title="Enter user story id">
@@ -76,16 +82,16 @@
 
 	<!--********************************************************-->
 	<script type="text/javascript" charset="${_response_encoding}">
-		
 		var isNotValid = function(value) {
 			var isValid = true;
-			if(value != ""){
+			if (value != "") {
 				var reg = /^\d{0,2}(\.\d{0,2}){0,1}$/;
-				isValid = isValid && reg.test(value) && parseFloat(value) >= 0 && parseFloat(value) <= 24;
+				isValid = isValid && reg.test(value) && parseFloat(value) >= 0
+						&& parseFloat(value) <= 24;
 			}
 			return !isValid;
 		}
-	
+
 		var createReportEntry = function(name, description) {
 			return {
 				name : name,
@@ -97,19 +103,19 @@
 				createReportEntry("storyTime", "Story Time"),
 				createReportEntry("rework", "Rework"),
 				createReportEntry("maintenance", "Maintenance"),
-				
+
 				createReportEntry("unplannedActivity", "Unplanned Activity"),
 				createReportEntry("sickLeave", "Sick Leave"),
 				createReportEntry("vacation", "Vacation"),
-				
+
 				createReportEntry("standUp", "Stand Up"),
 				createReportEntry("retrospective", "Retrospective"),
 				createReportEntry("projectPlanning", "Project Planning"),
-				
- 				createReportEntry("demo", "Demo"), 
+
+				createReportEntry("demo", "Demo"),
 				createReportEntry("estimates", "Estimates"),
 				createReportEntry("projectMeetings", "Project Meetings"),
-				
+
 				createReportEntry("trainingAndDevelopment",
 						"Training And Development"),
 				createReportEntry("management", "Management") ];
@@ -128,7 +134,7 @@
 			return {
 				name : name,
 				storyList : ko.observable([]),
-				story: ko.observable({}),
+				story : ko.observable({}),
 				report : createReportModel(reportEntries)
 			};
 		}
@@ -146,76 +152,136 @@
 
 			self.teamList = ko.observable([]);
 			self.chosenTeam = ko.observable(createTeamModel());
+			self.isValid = ko.observable(false);
 
-			self.summaryValid = ko.computed( function(){
-				var rep = self.chosenTeam().report;
-				var isValid = true;
-				
-				for(i in rep)
-					isValid = isValid && !isNotValid(rep[i]());
-				
+			self.summaryValid = ko
+					.computed(function() {
+						var rep = self.chosenTeam().report;
+						var isValid = true;
 
-				
-				
-				var sum = 0;
-				var x = 0;
-				
-				for(i in rep){
-					x = parseFloat(rep[i]());
-					if(!isNaN(x))
-						sum += x;
-				}
-				if(!isValid){
-					$(".errMessage").show();
-					return "Not all fiels is valid!";
-				}
-				if(sum > 24){
-					$(".errMessage").show();
-					return sum + " hours spended. You cant work more than 24 hours.";
-				}
-				else if(sum < 8 && sum != 0){
-					$(".errMessage").show();
-					return sum +" hours spended. You need more work.";
-				}
-				else{
-					$(".errMessage").hide();
-				}
-				
-			});
+						for (i in rep)
+							isValid = isValid && !isNotValid(rep[i]());
+
+						var sum = 0;
+						var x = 0;
+						var message = "";
+
+						for (i in rep) {
+							x = parseFloat(rep[i]());
+							if (!isNaN(x))
+								sum += x;
+						}
+						if (!isValid) {
+							self.isValid(false);
+							$(".errMessage").show();
+							return "Not all fiels is valid!";
+						}
+
+						if (sum > 8 && sum <= 24) {
+							self.isValid(true);
+							$(".errMessage").show();
+							message = "Are you really work " + sum + " hours.";
+						} else if (sum > 24) {
+							self.isValid(false);
+							$(".errMessage").show();
+							message = sum
+									+ " hours spended. You cant work more than 24 hours.";
+						} else if (sum < 8 && sum != 0) {
+							self.isValid(true);
+							$(".errMessage").show();
+							message = sum + " hours spent. You need more work.";
+						} else if (sum == 0) {
+							self.isValid(false);
+							$(".errMessage").hide();
+						} else {
+							self.isValid(true);
+							$(".errMessage").hide();
+						}
+
+						if (self.chosenTeam().story())
+							if (!/^((DE)|(US))([0-9])+$/i.test(self
+									.chosenTeam().story().id)) {
+								self.isValid(false);
+								$(".errMessage").show();
+								message = "Choose userstory.";
+							}
+
+						return message;
+
+					});
 
 			//get teamlist
-			self.updateTeamList = function(){			
+			self.updateTeamList = function() {
 				$.getJSON("@{DBManager.getTeamList()}", function(data) {
 					self.teamList(toKoTeamModel(data));
-	
+
 					if (self.teamList() && self.teamList().length) {
 						self.chosenTeam(self.teamList()[0]);
 					}
 					self.updateUSList();
 				});
 			}
-			
+
 			//get teamlist
-			self.updateUSList  = function(id){
+			self.updateUSList = function(id) {
 				//console.log(self.chosenTeam().story());
-				$.getJSON("@{DBManager.getUserStories()}?team=" + self.chosenTeam().name, function(data) {
-					if(self.chosenTeam().story()){
-						self.chosenTeam().storyList(data);
-						
-						for(var i=0; i < self.chosenTeam().storyList().length; i++){
-							if(self.chosenTeam().storyList()[i].id == id)
-							{
-								self.chosenTeam().story(self.chosenTeam().storyList()[i]);
-								break;
-							}
-						}
+				$
+						.getJSON(
+								"@{DBManager.getUserStories()}?team="
+										+ self.chosenTeam().name,
+								function(data) {
+									if (self.chosenTeam().story()) {
+										self.chosenTeam().storyList(data);
+
+										for (var i = 0; i < self.chosenTeam()
+												.storyList().length; i++) {
+											if (self.chosenTeam().storyList()[i].id == id) {
+												self
+														.chosenTeam()
+														.story(
+																self
+																		.chosenTeam()
+																		.storyList()[i]);
+												break;
+											}
+										}
+									} else {
+										self.chosenTeam().storyList(data);
+									}
+								});
+			}
+
+			self.generateFinalReport = function() {
+			};
+
+			function showReportLoader(isLoading) {
+				if (isLoading)
+					$('#reportLoader').show();
+				else
+					$('#reportLoader').hide();
+			}
+
+			//send report to server
+			self.saveReport = function() {
+				var link = "@{GoogleService.report}";
+
+				$.ajax({
+					url : link,
+					type : "POST",
+					data : {
+						mail : "${email}",
+						usId : self.chosenTeam().story().id,
+						usName : self.chosenTeam().story().desc
+					},
+					context : document.body,
+					beforeSend : function() {
+						showReportLoader(true);
 					}
-					else{
-						self.chosenTeam().storyList(data);
-					}
+				}).done(function(data) {
+					showReportLoader(false);
 				});
 			}
-			
+
 			self.updateTeamList();
 
 			self.clearFields = function() {
@@ -227,7 +293,7 @@
 					}
 				}
 			}
-			
+
 			//set new team and refresh US list
 			self.chooseTeam = function(teamModel) {
 
@@ -236,7 +302,7 @@
 				self.chosenTeam(teamModel);
 				self.updateUSList(id);
 			}
-			
+
 			//JS dialog to find user story from rally
 			$(function() {
 				var storyID = $("#storyID"), allFields = $([]).add(storyID), tips = $(".validateTips");
@@ -269,52 +335,63 @@
 						return true;
 					}
 				}
-				
-				function updateOk(isDisabled){
-					if(isDisabled){
-						$(".ui-dialog-buttonpane button:contains('Ok')").attr("disabled", true)
-		                .addClass("ui-state-disabled");
-					}else{
-						$(".ui-dialog-buttonpane button:contains('Ok')").attr("disabled", false)
-		                .removeClass("ui-state-disabled");
+
+				function updateOk(isDisabled) {
+					if (isDisabled) {
+						$(".ui-dialog-buttonpane button:contains('Ok')").attr(
+								"disabled", true).addClass("ui-state-disabled");
+					} else {
+						$(".ui-dialog-buttonpane button:contains('Ok')").attr(
+								"disabled", false).removeClass(
+								"ui-state-disabled");
 					}
 				}
-				
-				function showLoading(isLoading)
-				{
-					if(isLoading){
-						  $('#loader').show();
-						  $('.validateTips').hide();
-					}else{
+
+				function showLoading(isLoading) {
+					if (isLoading) {
+						$('#loader').show();
+						$('.validateTips').hide();
+					} else {
 						$('#loader').hide();
 						$('.validateTips').show();
 					}
 				}
 				$("#dialog-modal")
-						.dialog({
+						.dialog(
+								{
 									autoOpen : false,
 									height : 250,
 									width : 400,
 									resizable : false,
 									modal : true,
 									buttons : {
-										"Ok" : function() {											
+										"Ok" : function() {
 											var link = "@{DBManager.updateUserStory}?id="
-												+ findedTask.FormattedID + 
-												"&desc=" + findedTask.Name + 
-												"&team=" + self.chosenTeam().name;
+													+ findedTask.FormattedID
+													+ "&desc="
+													+ findedTask.Name
+													+ "&team="
+													+ self.chosenTeam().name;
 
-											$.ajax({
-											 	url: link,
-											 	context: document.body,
-											 	beforeSend: function() {
-													showLoading(true);
-												}
-											}).done(function(data) {
-												showLoading(false);
-												self.updateUSList();
-												$("#dialog-modal").dialog("close");
-											});
+											$
+													.ajax(
+															{
+																url : link,
+																context : document.body,
+																beforeSend : function() {
+																	showLoading(true);
+																}
+															})
+													.done(
+															function(data) {
+																showLoading(false);
+																self
+																		.updateUSList();
+																$(
+																		"#dialog-modal")
+																		.dialog(
+																				"close");
+															});
 										},
 										"Find" : function() {
 											var isValid = true;
@@ -333,24 +410,29 @@
 												var link = "@{RallyService.example}?id="
 														+ storyID.val();
 
-												$.ajax({
-													 	url: link,
-													 	context: document.body,
-													  	beforeSend: function() {
-															showLoading(true);
-														}
-													}).done(function(data) {
-														showLoading(false);
-														
-														updateTips(data.Name);
-														findedTask = data;
-														if (data.FormattedID != "Error"){
-															updateOk(false);
-														}else{
-															storyID.addClass("ui-state-error");
-															updateOk(true);
-														}
-													});
+												$
+														.ajax(
+																{
+																	url : link,
+																	context : document.body,
+																	beforeSend : function() {
+																		showLoading(true);
+																	}
+																})
+														.done(
+																function(data) {
+																	showLoading(false);
+
+																	updateTips(data.Name);
+																	findedTask = data;
+																	if (data.FormattedID != "Error") {
+																		updateOk(false);
+																	} else {
+																		storyID
+																				.addClass("ui-state-error");
+																		updateOk(true);
+																	}
+																});
 											}
 										},
 										"Cancel" : function() {
@@ -367,12 +449,13 @@
 									}
 								});
 				updateOk(true);
-				
+
 				$("#opener").click(function() {
 					$("#dialog-modal").dialog("open");
 				});
-				
+
 				$('#loader').hide();
+				$('#reportLoader').hide();
 			});
 		};
 

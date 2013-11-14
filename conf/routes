@@ -8,8 +8,7 @@ GET     /                                       Application.index
 # Json data
 GET     /getTeamList                            DBManager.getTeamList
 GET     /getStories                             DBManager.getUserStories
-
-
+POST    /report		 							GoogleService.report
 
 # Ignore favicon requests
 GET     /favicon.ico                            404
