@@ -19,25 +19,13 @@ public class Application extends Controller {
 
 	public static void index() {
 
-		User u = Security.connectedUser();
-		JsonObject me = null;
-		String email = null;
-		boolean isLogged = false;
-	
-		try {
-			if (u != null && u.access_token != null) {
-				me = WS.url(
-						"https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s",
-						WS.encode(u.access_token)).get().getJson()
-						.getAsJsonObject();
-				//System.out.println(me);
-				email = me.get("email").getAsString();
-				isLogged = true;
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		if (Security.isLogged()) {
+			String email = Security.getUserInfo().get("email").getAsString();
+			boolean isLogged = true;
+			
+			render( email, isLogged);
 		}
+		render();
 		
-		render(email, isLogged);
 	}
 }

@@ -1,6 +1,10 @@
 package controllers;
 
-import com.google.gson.JsonObject;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+
 import models.User;
 import play.libs.WS;
 import play.mvc.Before;
@@ -8,13 +12,9 @@ import play.mvc.Controller;
 import play.mvc.Scope;
 import play.mvc.results.Redirect;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.google.gdata.util.common.base.StringUtil;
+import com.google.gson.JsonObject;
 
-/**
- * Created with IntelliJ IDEA. User: mykola.sopushynskyi Date: 11/1/13 Time:
- * 2:17 PM To change this template use File | Settings | File Templates.
- */
 public class Security extends Controller/* extends Secure.Security */{
 
 	public static final String authURL = "https://accounts.google.com/o/oauth2/auth";
@@ -24,16 +24,13 @@ public class Security extends Controller/* extends Secure.Security */{
 
 	public static void logout() {
 		WS.url("https://accounts.google.com/o/oauth2/revoke?token=%s",
-				WS.encode(connectedUser().access_token)).post();
+				getToken()).post();
 		session.clear();
 		Application.index();
 	}
 
-	
 	public static void authGoogle() {
 		if (Scope.Params.current().get("code") != null) {
-			User u = connectedUser();
-
 			String accessCode = Scope.Params.current().get("code");
 			Map<String, Object> params = new HashMap<String, Object>();
 			params.put("client_id", clientId);
@@ -49,40 +46,65 @@ public class Security extends Controller/* extends Secure.Security */{
 
 			if (respObj.has("access_token")) {
 				accessToken = respObj.get("access_token").getAsString();
-				u.access_token = accessToken;
+				session.put("token", accessToken);
 			}
 
-			u.save();
 			Application.index();
 		}
 	}
-	
 
-	
 	public static void tryAuthGoogle() {
 		throw new Redirect(authURL + "?client_id=" + clientId
 				+ "&redirect_uri=" + redirectURL() + "&response_type=code"
 				+ "&scope=https://www.googleapis.com/auth/userinfo.email");
 	}
 
-	@Before
-	static void setuser() {
-		User user = null;
-		if (session.contains("uid")) {
-			user = User.get(Long.parseLong(session.get("uid")));
-		}
-		if (user == null) {
-			user = User.createNew();
-			session.put("uid", user.uid);
-		}
-		renderArgs.put("user", user);
-	}
-
 	static String redirectURL() {
 		return play.mvc.Router.getFullUrl("Security.authGoogle");
 	}
-	
-	static User connectedUser() {
-		return (User) renderArgs.get("user");
+
+	static String getToken() {
+		String result = session.get("token");
+
+		if (StringUtils.isBlank(result)) {
+			return null;
+		} else {
+			return result;
+		}
 	}
+
+	static boolean isLogged() {
+		String token = getToken();
+		JsonObject info = null;
+		boolean isLogged = false;
+
+		try {
+			if (token != null) {
+				if(getUserInfo() != null){
+					isLogged = true;
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return isLogged;
+	}
+
+	static JsonObject getUserInfo() {
+		String token = getToken();
+		JsonObject userInfo = null;
+
+		try {
+			if (token != null) {
+				userInfo = WS.url(
+						"https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s",
+						getToken()).get().getJson().getAsJsonObject();
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return userInfo;
+	}
+
 }
