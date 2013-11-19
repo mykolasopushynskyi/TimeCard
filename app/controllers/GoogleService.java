@@ -5,7 +5,6 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedList;
 
 import org.apache.commons.lang.StringUtils;
@@ -22,6 +21,8 @@ import com.google.gdata.data.spreadsheet.SpreadsheetFeed;
 import com.google.gdata.data.spreadsheet.WorksheetEntry;
 import com.google.gdata.util.AuthenticationException;
 import com.google.gdata.util.ServiceException;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class GoogleService extends Controller {
 	private static final FeedURLFactory urlFactory = FeedURLFactory
@@ -139,7 +140,8 @@ public class GoogleService extends Controller {
 	}
 
 	public static void report() {
-
+		JsonObject responce = new JsonObject();
+		
 		if (Security.isLogged() && validateMail(params.get("mail"))) {
 
 			boolean isValidHours = true;
@@ -209,17 +211,19 @@ public class GoogleService extends Controller {
 					row = service.insert(listFeedUrl, row);
 				}
 
-			} catch (IOException | ServiceException e1) { // TODO
-				// Auto-generated
-				// catch block
+			} catch (IOException | ServiceException e1) {
+				responce.addProperty("msg","Error during writing to google doc.");
+				renderJSON(responce.toString());
 				e1.printStackTrace();
 			}
 
 		} else {
-			// TODO make return statement
-			System.out.println("You are not logged");
-			// Application.index();
+			responce.addProperty("msg","Session expired or email is ivalid");
+			renderJSON(responce.toString());
 		}
+		
+		responce.addProperty("msg","Saving is successfull!");
+		renderJSON(responce.toString());
 	}
 
 	private static SpreadsheetService getSpreadsheetService() {

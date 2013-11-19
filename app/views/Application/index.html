@@ -48,7 +48,8 @@
 						type="text" /></td>
 				</tr>
 			</table>
-			<div data-bind="text: $root.summaryValid()" class="errMessage"></div>
+			<div data-bind="text: $root.summaryValid()" id="errMessage" class="errMessage"></div>
+			<div data-bind="text: $root.respMessage()" id="responceMessage" class="errMessage"></div>
 		</div>
 
 
@@ -59,11 +60,10 @@
 				value="Clear All" /> <input
 				data-bind="click: saveReport, enable: isValid" class="button"
 				type="button" value="Save" />
-			<div id="reportLoader" style="float: right">
+			<div id="reportLoader"  style="float: right">
 				<img
 					src="/public/images/loader.gif" />
 			</div>
-
 		</div>
 	</form>
 
@@ -122,7 +122,6 @@
 				result[entries[i].name] = ko.observable("");
 			}
 			return result;
-
 		}
 
 		var createTeamModel = function(name) {
@@ -148,7 +147,9 @@
 			self.teamList = ko.observable([]);
 			self.chosenTeam = ko.observable(createTeamModel());
 			self.isValid = ko.observable(false);
-
+			
+			self.respMessage = ko.observable("");
+			
 			self.summaryValid = ko
 					.computed(function() {
 						var rep = self.chosenTeam().report;
@@ -168,35 +169,35 @@
 						}
 						if (!isValid) {
 							self.isValid(false);
-							$(".errMessage").show();
+							$("#errMessage").show();
 							return "Not all fiels is valid!";
 						}
 						if (sum > 8 && sum <= 24) {
 							self.isValid(true);
-							$(".errMessage").show();
+							$("#errMessage").show();
 							message = "Are you really work " + sum + " hours.";
 						} else if (sum > 24) {
 							self.isValid(false);
-							$(".errMessage").show();
+							$("#errMessage").show();
 							message = sum
 									+ " hours spended. You cant work more than 24 hours.";
 						} else if (sum < 8 && sum != 0) {
 							self.isValid(true);
-							$(".errMessage").show();
+							$("#errMessage").show();
 							message = sum + " hours spent. You need more work.";
 						} else if (sum == 0) {
 							self.isValid(false);
-							$(".errMessage").hide();
+							$("#errMessage").hide();
 						} else {
 							self.isValid(true);
-							$(".errMessage").hide();
+							$("#errMessage").hide();
 						}
 
 						if ((self.chosenTeam().story() != undefined) && (self.chosenTeam().report != undefined)){
 							if (!/^((DE)|(US))([0-9])+$/i.test(self
 									.chosenTeam().story().id) && self.chosenTeam().report["storyTime"]() != "") {
 								self.isValid(false);
-								$(".errMessage").show();
+								$("#errMessage").show();
 								message = "Choose userstory to save story time.";
 							}
 						}
@@ -271,9 +272,7 @@
 					if(self.chosenTeam().report.hasOwnProperty(i))
 						finalReport[i] = self.chosenTeam().report[i]();
 				}
-				
-				//console.log(finalReport);
-				
+
 				$.ajax({
 					url : link,
 					type : "POST",
@@ -283,6 +282,9 @@
 						showReportLoader(true);
 					}
 				}).done(function(data) {
+					console.log(data);
+					$("#responceMessage").show(500).delay(10000).hide(500);
+					self.respMessage(data.msg);
 					showReportLoader(false);
 				});
 			}
@@ -449,6 +451,8 @@
 				
 				self.updateTeamList();
 				$('#loader').hide();
+				$("#errMessage").hide();
+				$("#responceMessage").hide();
 				$('#reportLoader').hide();
 			});
 		};
