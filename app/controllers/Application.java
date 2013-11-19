@@ -21,8 +21,7 @@ public class Application extends Controller {
 
 		if (Security.isLogged()) {
 			String email = Security.getUserInfo().get("email").getAsString();
-			boolean isLogged = true;
-			
+			boolean isLogged = true;		
 			render( email, isLogged);
 		}
 		render();

@@ -12,6 +12,11 @@
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#6bba70', endColorstr = '#6bba70', GradientType = 1); /* IE6-9 */
 }
 
+#content table {
+	float: left;
+}
+
+
 #content .login {
 	display: table;
 	background: #45774C;
@@ -42,6 +47,7 @@
 #content .errMessage{
 	width: 25%;
 	/*margin: 0 auto;*/
+	float: right;
 	border: 1px solid;
 	padding:10px;
 	margin-right:40px;

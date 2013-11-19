@@ -9,6 +9,7 @@ GET     /                                       Application.index
 GET     /getTeamList                            DBManager.getTeamList
 GET     /getStories                             DBManager.getUserStories
 POST    /report		 							GoogleService.report
+#GET     /loader.gif                           	
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

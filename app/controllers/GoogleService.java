@@ -2,20 +2,21 @@ package controllers;
 
 import java.io.IOException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 
 import play.Play;
 import play.mvc.Controller;
 import play.utils.Properties;
 
-import com.google.gdata.client.spreadsheet.CellQuery;
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
-import com.google.gdata.data.spreadsheet.CellEntry;
-import com.google.gdata.data.spreadsheet.CellFeed;
 import com.google.gdata.data.spreadsheet.ListEntry;
-import com.google.gdata.data.spreadsheet.ListFeed;
 import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
 import com.google.gdata.data.spreadsheet.SpreadsheetFeed;
 import com.google.gdata.data.spreadsheet.WorksheetEntry;
@@ -26,33 +27,198 @@ public class GoogleService extends Controller {
 	private static final FeedURLFactory urlFactory = FeedURLFactory
 			.getDefault();
 
+	// names of httpParametrs
+	public static String[] reportParams = { "rework", "maintenance",
+			"unplannedActivity", "sickLeave", "vacation", "standUp",
+			"retrospective", "projectPlanning", "demo", "estimates",
+			"projectMeetings", "trainingAndDevelopment", "management" };
+	
+	public static String[] reportNames = { "Rework", "Maintenance",
+		"Unplanned Activity", "Sick Leave", "Vacation", "Stand Up",
+		"Retrospective", "ProjectPlanning", "Demo", "Estimates",
+		"Project Meetings", "Training And Development", "Management" };
+
+	public static String[] names = { "mail", "team", "usId", "usName",
+			"storyTime" };
+
+	// names of headers in spreadsheet
+	// don't use white spaces in this names and headers in spreadsheet
+	public static String[] spreadsheetHeaders = { "Iteration", "Team",
+			"TimeStamp", "Username", "RallyId", "StoryName", "Hours", "Type" };
+
+	private static boolean validateReportHours(LinkedList<String> values) {
+		double sum = 0;
+		boolean isValid = true;
+
+		int i = 0;
+		double tmp;
+		for (i = 0; i < values.size() - 4; i++) {
+			if (values.get(i) != null) {
+
+				try {
+					tmp = Double.parseDouble(values.get(i));
+					sum += tmp;
+				} catch (NumberFormatException e) {
+					if (!StringUtils.isBlank(values.get(i))) {
+						System.out.println("sum bad format");
+						isValid = false;
+					}
+				}
+
+			} else {
+				System.out.println("sum null param");
+				isValid = false;
+				break;
+			}
+		}
+
+		// validate report hours
+		if (sum <= 0 || sum > 24) {
+			System.out.println("sum bad value");
+			isValid = false;
+		}
+
+		if (isValid) {
+			System.out.println("sum ok");
+		} else {
+			System.out.println("sum fails");
+		}
+		return isValid;
+	}
+
+	private static boolean validateStoryTime(String storyTime, String usId,
+			String usName) {
+
+		System.out.println("storyTime : " + storyTime);
+		System.out.println("usId : " + usId);
+		System.out.println("usName : " + usName);
+
+		boolean isValid = true;
+
+		if (!StringUtils.isBlank(storyTime)) {
+			if (usId.matches("(([uU][sS])|([dD][eE]))[0-9]+")) {
+				try {
+					if (Double.parseDouble(storyTime) <= 0
+							|| Double.parseDouble(storyTime) > 24) {
+						isValid = false;
+					}
+				} catch (NumberFormatException e) {
+					isValid = false;
+				}
+			} else {
+				isValid = false;
+			}
+		} else {
+			isValid = false;
+		}
+
+		if (isValid) {
+			System.out.println("us time ok");
+		} else {
+			System.out.println("us time fails");
+		}
+		return isValid;
+	}
+
+	
+	private static boolean validateMail(String mail) {
+		boolean isValid = false;
+
+		isValid = Security.getUserInfo().get("email").getAsString()
+				.equals(mail);
+		isValid = isValid
+				&& mail.matches("[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@globallogic.com");
+
+		if (isValid) {
+			System.out.println("mail ok");
+		} else {
+			System.out.println("mail fails");
+		}
+
+		return isValid;
+	}
+
 	public static void report() {
 
-		String mail = params.get("mail");
-		String usId = params.get("usId");
-		String usName = params.get("usName");
+		if (Security.isLogged() && validateMail(params.get("mail"))) {
 
-		List<String> report = new LinkedList<String>();
+			boolean isValidHours = true;
+			boolean isValidStoryTime = true;
 
-		report.add(mail);
-		report.add(usId);
-		report.add(usName);
+			LinkedList<String> values = new LinkedList<String>();
+			for (int i = 0; i < reportParams.length; i++) {
+				values.add(params.get(reportParams[i]));
+				System.out.println(reportParams[i] + ":val=" + values.get(i));
+			}
 
-		SpreadsheetService service = getSpreadsheetService();
+			isValidHours = validateReportHours(values);
 
-	    URL listFeedUrl;
-		try {
-			listFeedUrl = findWorksheet(service).getListFeedUrl();		    
-			ListEntry row = new ListEntry();
-			
-		    row.getCustomElements().setValueLocal("User", mail);
-		    row.getCustomElements().setValueLocal("Task", usId);
-		    row.getCustomElements().setValueLocal("Description", usName);
+			isValidStoryTime = validateStoryTime(params.get("storyTime"),
+					params.get("usId"), params.get("usName"));
 
-		    row = service.insert(listFeedUrl, row);		    
-		} catch (IOException | ServiceException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			SpreadsheetService service = getSpreadsheetService();
+
+			try {
+				URL listFeedUrl;
+				listFeedUrl = findWorksheet(service).getListFeedUrl();
+				ListEntry row;
+				String val;
+				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+				Calendar calendar = Calendar.getInstance();
+
+				for (int i = 0; i < reportParams.length; i++) {
+					val = params.get(reportParams[i]);
+					if (!StringUtils.isBlank(val)) {
+
+						row = new ListEntry();
+
+						row.getCustomElements().setValueLocal("Username",
+								params.get("mail"));
+
+						row.getCustomElements().setValueLocal("TimeStamp",
+								dateFormat.format(calendar.getTime()));
+						row.getCustomElements().setValueLocal("Team",
+								params.get("team"));
+
+						row.getCustomElements().setValueLocal("Hours", val);
+						row.getCustomElements().setValueLocal("Type",
+								reportNames[i]);
+
+						row = service.insert(listFeedUrl, row);
+					}
+				}
+
+				// add story time
+				if (isValidStoryTime) {
+					row = new ListEntry();
+
+					row.getCustomElements().setValueLocal("Username",
+							params.get("mail"));
+					row.getCustomElements().setValueLocal("TimeStamp",
+							dateFormat.format(calendar.getTime()));
+					row.getCustomElements().setValueLocal("Team",
+							params.get("team"));
+
+					row.getCustomElements().setValueLocal("Hours",
+							params.get("storyTime"));
+					row.getCustomElements().setValueLocal("RallyId",
+							params.get("usId"));
+					row.getCustomElements().setValueLocal("StoryName",
+							params.get("usName"));
+					row.getCustomElements().setValueLocal("Type", "Story Time");
+					row = service.insert(listFeedUrl, row);
+				}
+
+			} catch (IOException | ServiceException e1) { // TODO
+				// Auto-generated
+				// catch block
+				e1.printStackTrace();
+			}
+
+		} else {
+			// TODO make return statement
+			System.out.println("You are not logged");
+			// Application.index();
 		}
 	}
 
@@ -76,7 +242,6 @@ public class GoogleService extends Controller {
 			ex.printStackTrace();
 			service = null;
 		}
-
 		return service;
 	}
 
@@ -99,24 +264,5 @@ public class GoogleService extends Controller {
 			}
 		}
 		throw new RuntimeException("Cannot find worksheet=" + worksheetName);
-	}
-
-	private static CellFeed getRow(SpreadsheetService service, int minRow,
-			int maxRow, int minCol, int maxCol) {
-		CellQuery cellQuery;
-		try {
-			cellQuery = new CellQuery(findWorksheet(service).getCellFeedUrl());
-			cellQuery.setMinimumCol(minCol);
-			cellQuery.setMaximumCol(maxCol);
-			cellQuery.setMinimumRow(minRow);
-			cellQuery.setMaximumRow(maxRow);
-			cellQuery.setReturnEmpty(true);
-			return service.query(cellQuery, CellFeed.class);
-		} catch (ServiceException e) {
-			throw new RuntimeException(
-					"Service error when getting data to edit", e);
-		} catch (IOException e) {
-			throw new RuntimeException("Connection with server broken", e);
-		}
 	}
 }

@@ -4,19 +4,14 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.persistence.Query;
-
-import org.hibernate.Session;
-
-import models.Team;
 import models.Task;
+import models.Team;
 import models.TeamTask;
+import play.mvc.Controller;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
-import play.mvc.Controller;
 
 public class DBManager extends Controller {
 
@@ -36,8 +31,9 @@ public class DBManager extends Controller {
 	public static void getUserStories(String team) {
 		Gson gson = new Gson();
 		Team currentTeam = Team.find("name", team).first();
-		
-		List<TeamTask> tasks = TeamTask.find("tmId="+ currentTeam.id +" order by updatedDate desc")
+
+		List<TeamTask> tasks = TeamTask.find(
+				"tmId=" + currentTeam.id + " order by updatedDate desc")
 				.fetch();
 
 		long DAY_IN_MS = 1000 * 60 * 60 * 24;
@@ -47,21 +43,20 @@ public class DBManager extends Controller {
 		JsonArray data = new JsonArray();
 		JsonObject task = new JsonObject();
 
-		if (tasks.size() > 0) {
-			for (TeamTask t : tasks) {
+		for (TeamTask t : tasks) {
 
-				if (t.updatedDate.after(twoWeeksAgo)) {
-					task.addProperty("id", t.id.task.taskId);
-					task.addProperty("desc", t.id.task.description);
-					data.add(task);
-					task = new JsonObject();
-				}
+			if (t.updatedDate.after(twoWeeksAgo)) {
+				task = new JsonObject();
+				task.addProperty("id", t.id.task.taskId);
+				task.addProperty("desc", t.id.task.description);
+				data.add(task);
 			}
-		} else {
-			task.addProperty("id", "-");
-			task.addProperty("desc", "No userstories.");
-			data.add(task);
 		}
+
+		task = new JsonObject();
+		task.addProperty("id", "-");
+		task.addProperty("desc", "No userstories.");
+		data.add(task);
 
 		renderJSON(gson.toJson(data));
 	}

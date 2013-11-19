@@ -23,8 +23,10 @@ public class Security extends Controller/* extends Secure.Security */{
 	public static final String clientSecret = "xrbD2KH0MWHKxgj2mn2ktlUJ";
 
 	public static void logout() {
-		WS.url("https://accounts.google.com/o/oauth2/revoke?token=%s",
-				getToken()).post();
+		if (getToken() != null) {
+			WS.url("https://accounts.google.com/o/oauth2/revoke?token=%s",
+					getToken()).post();
+		}
 		session.clear();
 		Application.index();
 	}
@@ -80,7 +82,7 @@ public class Security extends Controller/* extends Secure.Security */{
 
 		try {
 			if (token != null) {
-				if(getUserInfo() != null){
+				if (getUserInfo().get("email").getAsString() != null) {
 					isLogged = true;
 				}
 			}
@@ -96,9 +98,9 @@ public class Security extends Controller/* extends Secure.Security */{
 
 		try {
 			if (token != null) {
-				userInfo = WS.url(
-						"https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s",
-						getToken()).get().getJson().getAsJsonObject();
+				userInfo = WS
+						.url("https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s",
+								getToken()).get().getJson().getAsJsonObject();
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
