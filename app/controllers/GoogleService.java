@@ -36,7 +36,7 @@ public class GoogleService extends Controller {
 	
 	public static String[] reportNames = { "Rework", "Maintenance",
 		"Unplanned Activity", "Sick Leave", "Vacation", "Stand Up",
-		"Retrospective", "ProjectPlanning", "Demo", "Estimates",
+		"Retrospective", "Project Planning", "Demo", "Estimates",
 		"Project Meetings", "Training And Development", "Management" };
 
 	public static String[] names = { "mail", "team", "usId", "usName",
