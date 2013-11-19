@@ -98,4 +98,21 @@ public class GoogleSocial implements Social {
 			return result;
 		}
 	}
+	
+	public String getUserInfo() {
+		String token = getToken();
+		JsonObject userInfo = null;
+
+		try {
+			if (token != null) {
+				userInfo = WS
+						.url("https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s",
+								getToken()).get().getJson().getAsJsonObject();
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return userInfo.get("email").getAsString();
+	}
 }

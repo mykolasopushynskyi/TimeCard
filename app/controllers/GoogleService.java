@@ -125,7 +125,7 @@ public class GoogleService extends Controller {
 	private static boolean validateMail(String mail) {
 		boolean isValid = false;
 
-		isValid = Security.getUserInfo().get("email").getAsString()
+		isValid = Security.getUserInfo()
 				.equals(mail);
 		isValid = isValid
 				&& mail.matches("[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@globallogic.com");

@@ -20,7 +20,7 @@ public class Application extends Controller {
 	public static void index() {
 
 		if (Security.isLogged()) {
-			String email = Security.getUserInfo().get("email").getAsString();
+			String email = Security.getUserInfo();
 			boolean isLogged = true;		
 			render( email, isLogged);
 		}

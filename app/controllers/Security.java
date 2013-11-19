@@ -35,35 +35,11 @@ public class Security extends Controller{
 		return play.mvc.Router.getFullUrl("Security.authGoogle");
 	}
 
-
 	static boolean isLogged() {
 		return socialGoogle.isLogged();
 	}
 
-	static String getToken() {
-		String result = session.get("token");
-		
-		if (StringUtils.isBlank(result)) {
-			return null;
-		} else {
-			return result;
-		}
-	}
-	
-	static JsonObject getUserInfo() {
-		String token = getToken();
-		JsonObject userInfo = null;
-
-		try {
-			if (token != null) {
-				userInfo = WS
-						.url("https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s",
-								getToken()).get().getJson().getAsJsonObject();
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-		return userInfo;
+	static String getUserInfo() {
+		return socialGoogle.getUserInfo();
 	}
 }
