@@ -223,31 +223,22 @@
 
 			//get teamlist
 			self.updateUSList = function(id) {
-				//console.log(self.chosenTeam().story());
-				$
-						.getJSON(
-								"@{DBManager.getUserStories()}?team="
-										+ self.chosenTeam().name,
-								function(data) {
-									if (self.chosenTeam().story()) {
-										self.chosenTeam().storyList(data);
-
-										for (var i = 0; i < self.chosenTeam()
-												.storyList().length; i++) {
-											if (self.chosenTeam().storyList()[i].id == id) {
-												self
-														.chosenTeam()
-														.story(
-																self
-																		.chosenTeam()
-																		.storyList()[i]);
-												break;
-											}
-										}
-									} else {
-										self.chosenTeam().storyList(data);
-									}
-								});
+				$.getJSON("@{DBManager.getUserStories()}?teamName=" + self.chosenTeam().name,
+					function(data) {
+						if (self.chosenTeam().story()) {
+							self.chosenTeam().storyList(data);
+							for (var i = 0; i < self.chosenTeam()
+									.storyList().length; i++) {
+								if (self.chosenTeam().storyList()[i].id == id) {
+									self.chosenTeam().story(self.chosenTeam().storyList()[i]);
+									break;
+								}
+							}
+						} else {
+							self.chosenTeam().storyList(data);
+						}
+					}
+				);
 			}
 
 			function showReportLoader(isLoading) {
@@ -307,13 +298,12 @@
 			//set new team and refresh US list
 			self.chooseTeam = function(teamModel) {
 				//kostyl'
-				if (teamModel.story()) {
-					var id = teamModel.story().id;
-					self.updateUSList(id);
-				}else{
-					self.updateUSList();
-				}
+				var id;
+				if (teamModel.story() != undefined)
+					id = teamModel.story().id;
+				
 				self.chosenTeam(teamModel);
+				self.updateUSList(id);
 			}
 
 			//JS dialog to find user story from rally
@@ -369,96 +359,88 @@
 						$('.validateTips').show();
 					}
 				}
-				$("#dialog-modal")
-						.dialog(
-								{
-									autoOpen : false,
-									height : 250,
-									width : 400,
-									resizable : false,
-									modal : true,
-									buttons : {
-										"Ok" : function() {
-											var link = "@{DBManager.updateUserStory}?taskId="
-													+ findedTask.FormattedID
-													+ "&description="
-													+ findedTask.Name
-													+ "&teamName="
-													+ self.chosenTeam().name;
+				$("#dialog-modal").dialog({
+							autoOpen : false,
+							height : 250,
+							width : 400,
+							resizable : false,
+							modal : true,
+							buttons : {
+								"Ok" : function() {
+									var link = "@{DBManager.updateUserStory}?taskId="
+											+ findedTask.rallyId
+											+ "&description="
+											+ findedTask.name
+											+ "&teamName="
+											+ self.chosenTeam().name;
 
-											$
-													.ajax(
-															{
-																url : link,
-																context : document.body,
-																beforeSend : function() {
-																	showLoading(true);
-																},
-																success: function(data) {
-																	self.updateUSList();
-																},
-																complete: function() {
-																	showLoading(false);
-																	$("#dialog-modal").dialog("close");
-																}
-															});
+									$.ajax({
+										url : link,
+										context : document.body,
+										beforeSend : function() {
+											showLoading(true);
 										},
-										"Find" : function() {
-											var isValid = true;
-											allFields
-													.removeClass("ui-state-error");
-											isValid = isValid
-													&& checkLength(storyID,
-															"userstory id", 3,
-															15);
-											isValid = isValid
-													&& checkRegexp(
-															storyID,
-															/^((DE)|(US))([0-9])+$/i,
-															"Userstory id must begin from US or DE and ends with id number.");
-											if (isValid) {
-												var link = "@{RallyService.example}?id="
-														+ storyID.val();
-
-												$
-														.ajax(
-																{
-																	url : link,
-																	context : document.body,
-																	beforeSend : function() {
-																		showLoading(true);
-																	}
-																})
-														.done(
-																function(data) {
-																	showLoading(false);
-
-																	updateTips(data.Name);
-																	findedTask = data;
-																	if (data.FormattedID != "Error") {
-																		updateOk(false);
-																	} else {
-																		storyID
-																				.addClass("ui-state-error");
-																		updateOk(true);
-																	}
-																});
-											}
+										success: function(data) {
+											self.updateUSList();
 										},
-										"Cancel" : function() {
-											$(this).dialog("close");
+										complete: function() {
+											showLoading(false);
+											$("#dialog-modal").dialog("close");
 										}
-									},
-									close : function() {
-										findedTask = null;
+									});
+								},
+								"Find" : function() {
+									var isValid = true;
+									allFields.removeClass("ui-state-error");
+									isValid = isValid && checkLength(storyID,"userstory id", 3,15);
+									isValid = isValid && checkRegexp(storyID,
+													/^((DE)|(US))([0-9])+$/i,
+													"Userstory id must begin from US or DE and ends with id number.");
+									if (isValid) {
+										var link = "@{RallyManager.example}?id="
+												+ storyID.val();
+
+										$.ajax({
+											url : link,
+											context : document.body,
+											beforeSend : function() {
+												showLoading(true);
+											}
+										}).done( 
+											function(data) {
+												showLoading(false);
+												
+												if(data.error){
+													updateTips(data.error);
+													storyID.addClass("ui-state-error");
+													updateOk(true);
+												}else{
+													updateTips(data.rallyId + " - "+ data.name);
+													updateOk(false);
+													findedTask = data;
+												}
+											}
+										);
+									}else{
 										updateOk(true);
-										updateTips("");
-										showLoading(false);
-										allFields.val("").removeClass(
-												"ui-state-error");
 									}
-								});
-				updateOk(true);
+								},
+								"Cancel" : function() {
+									$(this).dialog("close");
+								}
+							},
+							close : function() {
+								findedTask = null;
+								updateOk(true);
+								updateTips("");
+								showLoading(false);
+								allFields.val("").removeClass(
+										"ui-state-error");
+							},
+							open : function() {
+								updateOk(true);		
+							}
+						});
 
 				$("#opener").click(function() {
 					$("#dialog-modal").dialog("open");

@@ -49,7 +49,6 @@ public class GoogleService extends Controller {
 		double sum = 0;
 		boolean isValid = true;
 		
-		
 		for (int i = 0; i < values.size(); i++) {
 			if (!StringUtils.isBlank(values.get(i))) {
 				if (NumberUtils.isNumber(values.get(i))) {
@@ -64,12 +63,6 @@ public class GoogleService extends Controller {
 		if (sum <= 0 || sum > 24) {
 			isValid = false;
 		}
-/*
-		if (isValid) {
-			System.out.println("sum ok");
-		} else {
-			System.out.println("sum fails");
-		}*/
 		return isValid;
 	}
 
