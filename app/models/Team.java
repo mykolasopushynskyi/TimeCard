@@ -3,10 +3,13 @@ package models;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
+
+import org.apache.commons.io.filefilter.FalseFileFilter;
 
 import play.db.jpa.GenericModel;
 import play.db.jpa.Model;
@@ -14,10 +17,10 @@ import play.db.jpa.Model;
 @Entity
 public class Team extends Model {
 
-	@OneToMany
-	@JoinColumn(name="tmId")
+	@OneToMany(mappedBy = "id.team")
 	public List<TeamTask> teamTasks = new LinkedList<TeamTask>();
-	
+
+	@Column(nullable = false, length = 64, unique = true)
 	public String name;
 
 	public Team() {

@@ -48,8 +48,10 @@
 						type="text" /></td>
 				</tr>
 			</table>
-			<div data-bind="text: $root.summaryValid()" id="errMessage" class="errMessage"></div>
-			<div data-bind="text: $root.respMessage()" id="responceMessage" class="errMessage"></div>
+			<div data-bind="text: $root.summaryValid()" id="errMessage"
+				class="errMessage"></div>
+			<div data-bind="text: $root.respMessage()" id="responceMessage"
+				class="errMessage"></div>
 		</div>
 
 
@@ -60,9 +62,8 @@
 				value="Clear All" /> <input
 				data-bind="click: saveReport, enable: isValid" class="button"
 				type="button" value="Save" />
-			<div id="reportLoader"  style="float: right">
-				<img
-					src="/public/images/loader.gif" />
+			<div id="reportLoader" style="float: right">
+				<img src="/public/images/loader.gif" />
 			</div>
 		</div>
 	</form>
@@ -147,9 +148,9 @@
 			self.teamList = ko.observable([]);
 			self.chosenTeam = ko.observable(createTeamModel());
 			self.isValid = ko.observable(false);
-			
+
 			self.respMessage = ko.observable("");
-			
+
 			self.summaryValid = ko
 					.computed(function() {
 						var rep = self.chosenTeam().report;
@@ -187,15 +188,17 @@
 							message = sum + " hours spent. You need more work.";
 						} else if (sum == 0) {
 							self.isValid(false);
-							$("#errMessage").hide();
+							$("#errMessage").hide(500);
 						} else {
 							self.isValid(true);
-							$("#errMessage").hide();
+							$("#errMessage").hide(500);
 						}
 
-						if ((self.chosenTeam().story() != undefined) && (self.chosenTeam().report != undefined)){
+						if ((self.chosenTeam().story() != undefined)
+								&& (self.chosenTeam().report != undefined)) {
 							if (!/^((DE)|(US))([0-9])+$/i.test(self
-									.chosenTeam().story().id) && self.chosenTeam().report["storyTime"]() != "") {
+									.chosenTeam().story().id)
+									&& self.chosenTeam().report["storyTime"]() != "") {
 								self.isValid(false);
 								$("#errMessage").show();
 								message = "Choose userstory to save story time.";
@@ -221,37 +224,37 @@
 			//get teamlist
 			self.updateUSList = function(id) {
 				//console.log(self.chosenTeam().story());
-				$.getJSON(
-						"@{DBManager.getUserStories()}?team="
-								+ self.chosenTeam().name,
-						function(data) {
-							if (self.chosenTeam().story()) {
-								self.chosenTeam().storyList(data);
+				$
+						.getJSON(
+								"@{DBManager.getUserStories()}?team="
+										+ self.chosenTeam().name,
+								function(data) {
+									if (self.chosenTeam().story()) {
+										self.chosenTeam().storyList(data);
 
-								for (var i = 0; i < self.chosenTeam()
-										.storyList().length; i++) {
-									if (self.chosenTeam().storyList()[i].id == id) {
-										self
-											.chosenTeam()
-											.story(
-													self
+										for (var i = 0; i < self.chosenTeam()
+												.storyList().length; i++) {
+											if (self.chosenTeam().storyList()[i].id == id) {
+												self
 														.chosenTeam()
-														.storyList()[i]);
-										break;
+														.story(
+																self
+																		.chosenTeam()
+																		.storyList()[i]);
+												break;
+											}
+										}
+									} else {
+										self.chosenTeam().storyList(data);
 									}
-								}
-							} else {
-								self.chosenTeam().storyList(data);
-							}
-						});
+								});
 			}
 
 			function showReportLoader(isLoading) {
-				if (isLoading){
+				if (isLoading) {
 					self.isValid(false);
 					$('#reportLoader').show();
-				}
-				else{
+				} else {
 					self.isValid(true);
 					$('#reportLoader').hide();
 				}
@@ -262,14 +265,14 @@
 				var link = "@{GoogleService.report}";
 
 				var finalReport = {};
-				
+
 				finalReport.mail = "${email}";
 				finalReport.team = self.chosenTeam().name;
 				finalReport.usId = self.chosenTeam().story().id;
 				finalReport.usName = self.chosenTeam().story().desc;
-				
-				for(i in self.chosenTeam().report){
-					if(self.chosenTeam().report.hasOwnProperty(i))
+
+				for (i in self.chosenTeam().report) {
+					if (self.chosenTeam().report.hasOwnProperty(i))
 						finalReport[i] = self.chosenTeam().report[i]();
 				}
 
@@ -280,12 +283,14 @@
 					context : document.body,
 					beforeSend : function() {
 						showReportLoader(true);
+					},
+					success: function(data) {
+						self.respMessage(data.msg);												
+					},
+					complete: function() {
+						$("#responceMessage").show(500).delay(10000).hide(500);
+						showReportLoader(false);						
 					}
-				}).done(function(data) {
-					console.log(data);
-					$("#responceMessage").show(500).delay(10000).hide(500);
-					self.respMessage(data.msg);
-					showReportLoader(false);
 				});
 			}
 
@@ -302,9 +307,13 @@
 			//set new team and refresh US list
 			self.chooseTeam = function(teamModel) {
 				//kostyl'
-				var id = teamModel.story().id;
+				if (teamModel.story()) {
+					var id = teamModel.story().id;
+					self.updateUSList(id);
+				}else{
+					self.updateUSList();
+				}
 				self.chosenTeam(teamModel);
-				self.updateUSList(id);
 			}
 
 			//JS dialog to find user story from rally
@@ -361,7 +370,8 @@
 					}
 				}
 				$("#dialog-modal")
-						.dialog({
+						.dialog(
+								{
 									autoOpen : false,
 									height : 250,
 									width : 400,
@@ -369,24 +379,29 @@
 									modal : true,
 									buttons : {
 										"Ok" : function() {
-											var link = "@{DBManager.updateUserStory}?id="
+											var link = "@{DBManager.updateUserStory}?taskId="
 													+ findedTask.FormattedID
-													+ "&desc="
+													+ "&description="
 													+ findedTask.Name
-													+ "&team="
+													+ "&teamName="
 													+ self.chosenTeam().name;
 
-											$.ajax({ url : link,
-													context : document.body,
-													beforeSend : function() {
-														showLoading(true);
-													}
-											}).done(function(data) {
-												showLoading(false);
-												self.updateUSList();
-												$("#dialog-modal")
-													.dialog("close");
-											});
+											$
+													.ajax(
+															{
+																url : link,
+																context : document.body,
+																beforeSend : function() {
+																	showLoading(true);
+																},
+																success: function(data) {
+																	self.updateUSList();
+																},
+																complete: function() {
+																	showLoading(false);
+																	$("#dialog-modal").dialog("close");
+																}
+															});
 										},
 										"Find" : function() {
 											var isValid = true;
@@ -448,7 +463,7 @@
 				$("#opener").click(function() {
 					$("#dialog-modal").dialog("open");
 				});
-				
+
 				self.updateTeamList();
 				$('#loader').hide();
 				$("#errMessage").hide();

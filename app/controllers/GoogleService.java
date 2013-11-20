@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedList;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.StringUtils;
 
 import play.Play;
@@ -25,74 +26,55 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class GoogleService extends Controller {
-	private static final FeedURLFactory urlFactory = FeedURLFactory
+	private static final FeedURLFactory URL_FACTORY = FeedURLFactory
 			.getDefault();
 
 	// names of httpParametrs
-	public static String[] reportParams = { "rework", "maintenance",
+	public final static String[] REPORT_PARAMS = { "rework", "maintenance",
 			"unplannedActivity", "sickLeave", "vacation", "standUp",
 			"retrospective", "projectPlanning", "demo", "estimates",
 			"projectMeetings", "trainingAndDevelopment", "management" };
-	
-	public static String[] reportNames = { "Rework", "Maintenance",
-		"Unplanned Activity", "Sick Leave", "Vacation", "Stand Up",
-		"Retrospective", "Project Planning", "Demo", "Estimates",
-		"Project Meetings", "Training And Development", "Management" };
 
-	public static String[] names = { "mail", "team", "usId", "usName",
-			"storyTime" };
+	public final static String[] REPORT_NAMES = { "Rework", "Maintenance",
+			"Unplanned Activity", "Sick Leave", "Vacation", "Stand Up",
+			"Retrospective", "Project Planning", "Demo", "Estimates",
+			"Project Meetings", "Training And Development", "Management" };
 
 	// names of headers in spreadsheet
 	// don't use white spaces in this names and headers in spreadsheet
-	public static String[] spreadsheetHeaders = { "Iteration", "Team",
+	public static final String[] SPREADSHEET_HEADERS = { "Iteration", "Team",
 			"TimeStamp", "Username", "RallyId", "StoryName", "Hours", "Type" };
 
 	private static boolean validateReportHours(LinkedList<String> values) {
 		double sum = 0;
 		boolean isValid = true;
-
-		int i = 0;
-		double tmp;
-		for (i = 0; i < values.size() - 4; i++) {
-			if (values.get(i) != null) {
-
-				try {
-					tmp = Double.parseDouble(values.get(i));
-					sum += tmp;
-				} catch (NumberFormatException e) {
-					if (!StringUtils.isBlank(values.get(i))) {
-						System.out.println("sum bad format");
-						isValid = false;
-					}
+		
+		
+		for (int i = 0; i < values.size(); i++) {
+			if (!StringUtils.isBlank(values.get(i))) {
+				if (NumberUtils.isNumber(values.get(i))) {
+					sum +=  Double.parseDouble(values.get(i));
+				} else {
+					isValid = false;
+					break;
 				}
-
-			} else {
-				System.out.println("sum null param");
-				isValid = false;
-				break;
 			}
 		}
 
-		// validate report hours
 		if (sum <= 0 || sum > 24) {
-			System.out.println("sum bad value");
 			isValid = false;
 		}
-
+/*
 		if (isValid) {
 			System.out.println("sum ok");
 		} else {
 			System.out.println("sum fails");
-		}
+		}*/
 		return isValid;
 	}
 
 	private static boolean validateStoryTime(String storyTime, String usId,
 			String usName) {
-
-		System.out.println("storyTime : " + storyTime);
-		System.out.println("usId : " + usId);
-		System.out.println("usName : " + usName);
 
 		boolean isValid = true;
 
@@ -113,48 +95,34 @@ public class GoogleService extends Controller {
 			isValid = false;
 		}
 
-		if (isValid) {
-			System.out.println("us time ok");
-		} else {
-			System.out.println("us time fails");
-		}
 		return isValid;
 	}
 
-	
 	private static boolean validateMail(String mail) {
 		boolean isValid = false;
 
-		isValid = Security.getUserInfo()
-				.equals(mail);
+		isValid = Security.getUserInfo().equals(mail);
 		isValid = isValid
 				&& mail.matches("[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@globallogic.com");
-
-		if (isValid) {
-			System.out.println("mail ok");
-		} else {
-			System.out.println("mail fails");
-		}
 
 		return isValid;
 	}
 
 	public static void report() {
 		JsonObject responce = new JsonObject();
-		
+
 		if (Security.isLogged() && validateMail(params.get("mail"))) {
 
 			boolean isValidHours = true;
 			boolean isValidStoryTime = true;
 
 			LinkedList<String> values = new LinkedList<String>();
-			for (int i = 0; i < reportParams.length; i++) {
-				values.add(params.get(reportParams[i]));
-				System.out.println(reportParams[i] + ":val=" + values.get(i));
+
+			for (int i = 0; i < REPORT_PARAMS.length; i++) {
+				values.add(params.get(REPORT_PARAMS[i]));
 			}
 
 			isValidHours = validateReportHours(values);
-
 			isValidStoryTime = validateStoryTime(params.get("storyTime"),
 					params.get("usId"), params.get("usName"));
 
@@ -168,8 +136,8 @@ public class GoogleService extends Controller {
 				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
 				Calendar calendar = Calendar.getInstance();
 
-				for (int i = 0; i < reportParams.length; i++) {
-					val = params.get(reportParams[i]);
+				for (int i = 0; i < REPORT_PARAMS.length; i++) {
+					val = params.get(REPORT_PARAMS[i]);
 					if (!StringUtils.isBlank(val)) {
 
 						row = new ListEntry();
@@ -184,7 +152,7 @@ public class GoogleService extends Controller {
 
 						row.getCustomElements().setValueLocal("Hours", val);
 						row.getCustomElements().setValueLocal("Type",
-								reportNames[i]);
+								REPORT_NAMES[i]);
 
 						row = service.insert(listFeedUrl, row);
 					}
@@ -209,20 +177,24 @@ public class GoogleService extends Controller {
 							params.get("usName"));
 					row.getCustomElements().setValueLocal("Type", "Story Time");
 					row = service.insert(listFeedUrl, row);
+				} else {
+					responce.addProperty("msg", "Can't save story time.");
+					renderJSON(responce.toString());
 				}
 
 			} catch (IOException | ServiceException e1) {
-				responce.addProperty("msg","Error during writing to google doc.");
+				responce.addProperty("msg",
+						"Error during writing to google doc.");
 				renderJSON(responce.toString());
 				e1.printStackTrace();
 			}
 
 		} else {
-			responce.addProperty("msg","Session expired or email is ivalid");
+			responce.addProperty("msg", "Session expired or email is ivalid");
 			renderJSON(responce.toString());
 		}
-		
-		responce.addProperty("msg","Saving is successfull!");
+
+		responce.addProperty("msg", "Saving is successfull!");
 		renderJSON(responce.toString());
 	}
 
@@ -256,7 +228,7 @@ public class GoogleService extends Controller {
 		String worksheetName = "Polaris";
 
 		SpreadsheetFeed feed = service.getFeed(
-				urlFactory.getSpreadsheetsFeedUrl(), SpreadsheetFeed.class);
+				URL_FACTORY.getSpreadsheetsFeedUrl(), SpreadsheetFeed.class);
 		for (SpreadsheetEntry se : feed.getEntries()) {
 			if (se.getSpreadsheetLink().getHref().endsWith(spreadsheetKey)) {
 				for (WorksheetEntry we : se.getWorksheets()) {

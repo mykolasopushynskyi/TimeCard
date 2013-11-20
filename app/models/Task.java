@@ -3,6 +3,7 @@ package models;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -21,28 +22,32 @@ import play.db.jpa.Model;
 @Entity
 public class Task extends GenericModel {
 	@Id
-	public String taskId;
+	public String id;
 	
-	@OneToMany
-	@JoinColumn(name="taskId")
+	@OneToMany(mappedBy = "id.task")
 	public List<TeamTask> teamTasks = new LinkedList<TeamTask>();
 	
+	@Column(length = 255)
 	public String description;
 
 	public Task() {
 	}
 
+	public Task(String id) {
+		this.id = id;
+	}
+
 	public Task(String userStoryID, String userStoryDesc) {
-		this.taskId = userStoryID;
+		this.id = userStoryID;
 		this.description = userStoryDesc;
 	}
 
 	public String getTaskId() {
-		return taskId;
+		return id;
 	}
 
 	public void setTaskId(String taskId) {
-		this.taskId = taskId;
+		this.id = taskId;
 	}
 
 	public String getDescription() {
@@ -53,11 +58,4 @@ public class Task extends GenericModel {
 		this.description = description;
 	}
 	
-	/*
-	//Need to find by key
-    @Override
-    public Object _key() {
-        return getTaskId();
-    }*/
-
 }
