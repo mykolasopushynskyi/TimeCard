@@ -35,11 +35,11 @@ public class Security extends Controller{
 		return play.mvc.Router.getFullUrl("Security.authGoogle");
 	}
 
-	static boolean isLogged() {
+	public static boolean isLogged() {
 		return socialGoogle.isLogged();
 	}
 
-	static String getUserInfo() {
+	public static String getUserInfo() {
 		return socialGoogle.getUserInfo();
 	}
 }
