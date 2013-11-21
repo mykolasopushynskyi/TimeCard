@@ -48,14 +48,16 @@
 						type="text" /></td>
 				</tr>
 			</table>
-			<div data-bind="text: $root.summaryValid()" id="errMessage"
-				class="errMessage"></div>
-			<div data-bind="text: $root.respMessage()" id="responceMessage"
-				class="errMessage"></div>
+			
+			<div data-bind="text: $root.summaryValid()" id="validationWarning"
+				class="warningMessage"></div>
+			<div data-bind="text: $root.summaryValid()" id="validationError"
+				class="errorMessage"></div>
+			<div data-bind="text: $root.respMessage()" id="successMessage"
+				class="successMessage"></div>
+			<div data-bind="text: $root.respMessage()" id="errorMessage"
+				class="errorMessage"></div>
 		</div>
-
-
-		<!--  div data-bind="text: $root.summaryValid()" class="errMessage"></div>-->
 
 		<div class="buttons">
 			<input data-bind="click: clearFields" class="button" type="button"
@@ -168,41 +170,46 @@
 							if (!isNaN(x))
 								sum += x;
 						}
+						
 						if (!isValid) {
 							self.isValid(false);
-							$("#errMessage").show();
+							$("#validationWarning").hide(500);
+							$("#validationError").show(500);
 							return "Not all fiels is valid!";
-						}
-						if (sum > 8 && sum <= 24) {
-							self.isValid(true);
-							$("#errMessage").show();
-							message = "Are you really work " + sum + " hours.";
 						} else if (sum > 24) {
 							self.isValid(false);
-							$("#errMessage").show();
+							$("#validationWarning").hide(500);
+							$("#validationError").show(500);
 							message = sum
 									+ " hours spended. You cant work more than 24 hours.";
+						} else if (sum > 8 && sum <= 24) {
+							self.isValid(true);
+							$("#validationError").hide(500);
+							$("#validationWarning").show(500);
+							message = "Are you really work " + sum + " hours.";
+						
+						} else if (self.chosenTeam().story() != undefined
+									&& self.chosenTeam().report != undefined
+									&& self.chosenTeam().story().id == "-"
+									&& self.chosenTeam().report["storyTime"]() != "") 
+						{
+								self.isValid(false);
+								$("#validationWarning").hide(500);
+								$("#validationError").show(500);
+								message = "Choose userstory to save story time.";
 						} else if (sum < 8 && sum != 0) {
 							self.isValid(true);
-							$("#errMessage").show();
+							$("#validationError").hide(500);
+							$("#validationWarning").show(500);
 							message = sum + " hours spent. You need more work.";
 						} else if (sum == 0) {
 							self.isValid(false);
-							$("#errMessage").hide(500);
+							$("#validationError").hide(500);
+							$("#validationWarning").hide(500);
 						} else {
 							self.isValid(true);
-							$("#errMessage").hide(500);
-						}
-
-						if ((self.chosenTeam().story() != undefined)
-								&& (self.chosenTeam().report != undefined)) {
-							if (!/^((DE)|(US))([0-9])+$/i.test(self
-									.chosenTeam().story().id)
-									&& self.chosenTeam().report["storyTime"]() != "") {
-								self.isValid(false);
-								$("#errMessage").show();
-								message = "Choose userstory to save story time.";
-							}
+							$("#validationError").hide(500);
+							$("#validationWarning").hide(500);
 						}
 
 						return message;
@@ -277,9 +284,15 @@
 					},
 					success: function(data) {
 						self.respMessage(data.msg);												
+						if(data.isError){
+							$("#successMessage").hide(500);
+							$("#errorMessage").show(500).delay(10000).hide(500);
+						}else{
+							$("#errorMessage").hide(500);
+							$("#successMessage").show(500).delay(10000).hide(500);
+						}
 					},
 					complete: function() {
-						$("#responceMessage").show(500).delay(10000).hide(500);
 						showReportLoader(false);						
 					}
 				});
@@ -448,8 +461,10 @@
 
 				self.updateTeamList();
 				$('#loader').hide();
-				$("#errMessage").hide();
-				$("#responceMessage").hide();
+				$("#validationWarning").hide();
+				$("#validationError").hide();
+				$("#successMessage").hide();
+				$("#errorMessage").hide();
 				$('#reportLoader').hide();
 			});
 		};

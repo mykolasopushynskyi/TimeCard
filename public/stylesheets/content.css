@@ -44,18 +44,29 @@
 	padding: 10px;
 }
 
-#content .errMessage{
+#content .errorMessage, .warningMessage, .successMessage{
 	width: 25%;
-	/*margin: 0 auto;*/
 	float: right;
 	border: 1px solid;
 	padding:10px;
 	margin-right:40px;
 	margin-top:10px;
-	
-	color: #9F6000;
 	float:right;
+}
+
+#content .errorMessage{
+	color: #9F0000;
+	background-color: #FEB3B3;
+}
+
+#content .warningMessage{
+	color: #9F6000;
 	background-color: #FEEFB3;
+}
+
+#content .successMessage{
+	color: #609F00;
+	background-color: #B3FEB3;
 }
 
 #content .errorField {
