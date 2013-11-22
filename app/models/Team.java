@@ -3,11 +3,13 @@ package models;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import org.apache.commons.io.filefilter.FalseFileFilter;
 
@@ -23,9 +25,12 @@ public class Team extends Model {
 	@Column(nullable = false, length = 64, unique = true)
 	public String name;
 
+	@OneToOne//(cascade = CascadeType.ALL, mappedBy="team")
+	public Rally rally;
+
 	public Team() {
 	}
-	
+
 	public Team(String name) {
 		this.name = name;
 	}
@@ -37,7 +42,6 @@ public class Team extends Model {
 	public void setId(Long id) {
 		this.id = id;
 	}
-
 
 	public String getName() {
 		return name;
