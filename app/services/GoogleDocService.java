@@ -32,110 +32,119 @@ public class GoogleDocService {
 	private static final String SPREADSHEET_KEY = "0AsiyXCOmDCswdHNSUHlLNmtoMkZjdjVZWUJ3bUhMekE";
 	private static final String WORKSHEET = "Polaris";
 
-	private static final FeedURLFactory URL_FACTORY = FeedURLFactory
-			.getDefault();
-
-	// names of httpParametrs (duplicate ones from js of index page)
-	public final static String[] REPORT_PARAMS = { "rework", "maintenance",
+	// names of httpParametrs (duplicate ones in js of index page)
+	private final static String[] REPORT_PARAMS = { "rework", "maintenance",
 			"unplannedActivity", "sickLeave", "vacation", "standUp",
 			"retrospective", "projectPlanning", "demo", "estimates",
 			"projectMeetings", "trainingAndDevelopment", "management" };
 
-	public final static String[] REPORT_NAMES = { "Rework", "Maintenance",
+	private final static String[] REPORT_NAMES = { "Rework", "Maintenance",
 			"Unplanned Activity", "Sick Leave", "Vacation", "Stand Up",
 			"Retrospective", "Project Planning", "Demo", "Estimates",
 			"Project Meetings", "Training And Development", "Management" };
 
 	// names of headers in spreadsheet
-	// don't use white spaces in this names and headers in spreadsheet
-	// Also you need to create google spreadsheet with HEADER ROW labeled by
+	// don't use white spaces in this names and headers names in spreadsheet
+	// Also you need to create google spreadsheet with HEADER ROW labeled by the
 	// following captions
-	public static final String[] SPREADSHEET_HEADERS = { "Iteration", "Team",
-			"TimeStamp", "Username", "RallyId", "StoryName", "Hours", "Type" };
-	
-	public static final ReportDataValidation validator = new ReportDataValidation();
+	// { "Iteration", "Team", "TimeStamp", "Username", "RallyId", "StoryName",
+	// "Hours", "Type" };
+
+	private static DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+	private static FeedURLFactory urlFactory = FeedURLFactory.getDefault();
+	private static ReportDataValidation validator = new ReportDataValidation();
 
 	public static String saveReport(Params HTTPparams) {
 
 		JsonObject response = new JsonObject();
-
-		boolean isValidHours;
-		boolean isValidStoryTime;
-
 		SpreadsheetService service = getSpreadsheetService();
 
-		LinkedList<String> values = new LinkedList<String>();
-
-		ListEntry row;
-		String reportParamValue;
-
-		for (int i = 0; i < REPORT_PARAMS.length; i++) {
-			values.add(HTTPparams.get(REPORT_PARAMS[i]));
-		}
-
 		if (validator.isValidCredentials(HTTPparams.get("mail"))) {
-
-			isValidHours = validator.validateReportHours(values);
-			isValidStoryTime = validator.validateStoryTime(HTTPparams.get("storyTime"),
-					HTTPparams.get("usId"), HTTPparams.get("usName"));
-			
-			if (isValidHours) {
-				try {
-					URL listRowsUrl = findWorksheet(service).getListFeedUrl();
-
-					// add all parameters
-					for (int i = 0; i < REPORT_PARAMS.length; i++) {
-						reportParamValue = HTTPparams.get(REPORT_PARAMS[i]);
-						if (!StringUtils.isBlank(reportParamValue)) {
-							row = createRowEntry(HTTPparams, reportParamValue,
-									REPORT_NAMES[i]);
-							row = service.insert(listRowsUrl, row);
-						}
+			if (validator.validateFields(HTTPparams, REPORT_PARAMS)) {
+				if (validator.validateReportHours(getValues(HTTPparams))) {
+					try {
+						response = save(HTTPparams, service);
+					} catch (IOException | ServiceException
+							| NullPointerException e1) {
+						response.addProperty("isError", true);
+						response.addProperty("msg",
+								"Error during writing to google doc.");
 					}
-
-					// add story time parameter
-					if (!StringUtils.isBlank(HTTPparams.get("storyTime"))) {
-						if (isValidStoryTime) {
-							row = createStoryTimeEntry(HTTPparams);
-							row = service.insert(listRowsUrl, row);
-						} else {
-							response.addProperty("isError", true);
-							response.addProperty("msg",
-									"Can't save story time.");
-							return response.toString();
-						}
-					}
-
-				} catch (IOException | ServiceException e1) {
-					//e1.printStackTrace();
+				} else {
 					response.addProperty("isError", true);
-					response.addProperty("msg",
-							"Error during writing to google doc.");
-					return response.toString();
+					response.addProperty("msg", "Hours sum vslidation failed.");
 				}
 			} else {
 				response.addProperty("isError", true);
-				response.addProperty("msg", "Hours sum vslidation failed.");
-				return response.toString();
+				response.addProperty("msg", "Not all fiels is valid.");
 			}
 		} else {
 			response.addProperty("isError", true);
 			response.addProperty("msg", "Session expired or email is ivalid");
-			return response.toString();
 		}
-		
-		response.addProperty("isError", false);
-		response.addProperty("msg", "Saving is successfull!");
+
 		return response.toString();
 	}
-	
-	
-	
+
+	private static LinkedList<String> getValues(Params HTTPparams) {
+		LinkedList<String> values = new LinkedList<String>();
+		String val;
+
+		for (int i = 0; i < REPORT_PARAMS.length; i++) {
+			val = HTTPparams.get(REPORT_PARAMS[i]);
+			if (validator.isNullNumber(val)) {
+				values.add("");
+			} else {
+				values.add(val);
+			}
+		}
+		return values;
+	}
+
+	private static JsonObject save(Params HTTPparams, SpreadsheetService service)
+			throws IOException, ServiceException, NullPointerException {
+
+		ListEntry row;
+		String paramValue;
+		String paramType;
+
+		String storyTime = HTTPparams.get("storyTime");
+		String storyId = HTTPparams.get("usId");
+		String storyName = HTTPparams.get("usName");
+
+		JsonObject response = new JsonObject();
+		response.addProperty("isError", false);
+		response.addProperty("msg", "Saving is successfull!");
+
+		URL workSheetUrl = findWorksheet(service).getListFeedUrl();
+
+		// add all parameters
+		for (int i = 0; i < REPORT_PARAMS.length; i++) {
+			paramValue = HTTPparams.get(REPORT_PARAMS[i]);
+			paramType = REPORT_NAMES[i];
+			if (!validator.isNullNumber(paramValue)) {
+				row = createRowEntry(HTTPparams, paramValue, paramType);
+				row = service.insert(workSheetUrl, row);
+			}
+		}
+
+		// add story time parameter
+		if (!StringUtils.isBlank(HTTPparams.get("storyTime"))) {
+			if (validator.validateStoryTime(storyTime, storyId, storyName)) {
+				row = createStoryTimeEntry(HTTPparams);
+				row = service.insert(workSheetUrl, row);
+			} else {
+				response.addProperty("isError", true);
+				response.addProperty("msg", "Can't save story time.");
+			}
+		}
+
+		return response;
+	}
 
 	private static String getDate() {
 		Calendar calendar = Calendar.getInstance();
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
-		return dateFormat.format((calendar.getTime()));
+		return dateFormat.format(calendar.getTime());
 	}
 
 	private static ListEntry createRowEntry(Params params, String hoursValue,
@@ -147,7 +156,7 @@ public class GoogleDocService {
 		row.getCustomElements().setValueLocal("TimeStamp", getDate());
 		row.getCustomElements().setValueLocal("Hours", hoursValue);
 		row.getCustomElements().setValueLocal("Type", activityType);
-		
+
 		return row;
 	}
 
@@ -159,7 +168,8 @@ public class GoogleDocService {
 		row.getCustomElements().setValueLocal("TimeStamp", getDate());
 		row.getCustomElements().setValueLocal("Hours", params.get("storyTime"));
 		row.getCustomElements().setValueLocal("RallyId", params.get("usId"));
-		row.getCustomElements().setValueLocal("StoryName", params.get("usName"));
+		row.getCustomElements()
+				.setValueLocal("StoryName", params.get("usName"));
 		row.getCustomElements().setValueLocal("Type", "Story Time");
 
 		return row;
@@ -192,7 +202,7 @@ public class GoogleDocService {
 			throws IOException, ServiceException {
 
 		SpreadsheetFeed feed = service.getFeed(
-				URL_FACTORY.getSpreadsheetsFeedUrl(), SpreadsheetFeed.class);
+				urlFactory.getSpreadsheetsFeedUrl(), SpreadsheetFeed.class);
 		for (SpreadsheetEntry se : feed.getEntries()) {
 			if (se.getSpreadsheetLink().getHref().endsWith(SPREADSHEET_KEY)) {
 				for (WorksheetEntry we : se.getWorksheets()) {
@@ -204,6 +214,6 @@ public class GoogleDocService {
 			}
 		}
 
-		throw new RuntimeException("Can't find worksheet= " + WORKSHEET);
+		return null;
 	}
 }
