@@ -7,14 +7,14 @@ public class BasicTest extends UnitTest {
 
     @After @Before
     public void cleanUp() {
-        Fixtures.deleteAllModels();
+        //Fixtures.deleteAllModels();
     }
 
     @Test
     public void aVeryImportantThingToTest() {
         assertEquals(2, 1 + 1);
 
-        Fixtures.loadModels("initial-data.yml");
+        //Fixtures.loadModels("initial-data.yml");
     }
 
 }

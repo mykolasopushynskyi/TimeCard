@@ -5,3 +5,20 @@
     open('/')
     assertNotTitle('Application error')
 #{/selenium}
+
+#{selenium 'Test security'}
+
+    // Try to log in the administration area
+	open('/')
+    clickAndWait('login')
+ 
+    // Verify that the user in correctly logged in
+    assertTextPresent('Options')
+    assertTextPresent('TeamList')
+    
+    #clearSession()
+    clickAndWait('logout')
+    open('/')
+    assertTextPresent('Please Login')
+ 
+#{/selenium}
