@@ -25,18 +25,22 @@ public class ReportDataValidation {
 	public boolean isValidField(String val) {
 		boolean result = true;
 
-		if (val.matches("[0-9]{0,2}(\\.[0-9]{0,2}){0,1}")) {
-			if (!StringUtils.isBlank(val)) {
-				try {
-					if (Double.parseDouble(val) > 0
-							&& Double.parseDouble(val) <= 24) {
-						result = true;
-					} else {
+		if (val != null) {
+			if (val.matches("[0-9]{0,2}(\\.[0-9]{0,2}){0,1}")) {
+				if (!StringUtils.isBlank(val)) {
+					try {
+						if (Double.parseDouble(val) > 0
+								&& Double.parseDouble(val) <= 24) {
+							result = true;
+						} else {
+							result = false;
+						}
+					} catch (NumberFormatException e) {
 						result = false;
 					}
-				} catch (NumberFormatException e) {
-					result = false;
 				}
+			} else {
+				result = false;
 			}
 		} else {
 			result = false;
@@ -49,19 +53,22 @@ public class ReportDataValidation {
 	public boolean validateReportHours(LinkedList<String> values) {
 		double sum = 0;
 		boolean isValid = true;
-
-		for (int i = 0; i < values.size(); i++) {
-			if (!StringUtils.isBlank(values.get(i))) {
-				if (NumberUtils.isNumber(values.get(i))) {
-					sum += Double.parseDouble(values.get(i));
-				} else {
-					isValid = false;
-					break;
+		if (values != null) {
+			for (int i = 0; i < values.size(); i++) {
+				if (!StringUtils.isBlank(values.get(i))) {
+					if (NumberUtils.isNumber(values.get(i))) {
+						sum += Double.parseDouble(values.get(i));
+					} else {
+						isValid = false;
+						break;
+					}
 				}
 			}
-		}
 
-		if (sum <= 0 || sum > 24) {
+			if (sum <= 0 || sum > 24) {
+				isValid = false;
+			}
+		} else {
 			isValid = false;
 		}
 		return isValid;
@@ -93,7 +100,12 @@ public class ReportDataValidation {
 	}
 
 	public boolean isValidUserStoryId(String reallyId) {
-		return reallyId.matches("(([uU][sS])|([dD][eE]))[0-9]+");
+		if (reallyId != null) {
+			return reallyId.matches("(([uU][sS])|([dD][eE]))[0-9]+");
+		} else {
+			return false;
+		}
+
 	}
 
 	public static boolean isNullNumber(String val) {
