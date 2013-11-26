@@ -6,7 +6,7 @@
 			width="106" height="18" alt="GlobalLogic logo" />
 	</div>
 	<div class="logininfo">
-		<a class="blue" href="@{Security.logout}">${email} X</a>
+		<a id="logout" class="blue" href="@{Security.logout}">${email} X</a>
 	</div>
 </div>
 
@@ -92,15 +92,18 @@
 	<!--********************************************************-->
 	<script type="text/javascript" charset="${_response_encoding}">
 
-		var audio = document.getElementById('#bieber');
-		audio = new Audio();
-		audio.setAttribute("src","http://cs9-2v4.vk.me/p22/bfc625520b540e.mp3");
-		audio.load(); // required for 'older' browsers
+		var audio;// = document.getElementById('#bieber');
+ // required for 'older' browsers
 		
-		if("${email}" == "adrian.shyshkovskyi@globallogic.com" &&
-				(new Datae()).getYear() >= 2014)
+		if("${email}" == "adrian.shyshkovskyi@globallogic.com")
 		   	audio.play();
-
+		
+		var playBieber  = function(){
+			audio = new Audio();
+			audio.setAttribute("src","http://cs4834v4.vk.me/u12788326/audios/a84ed2880e5e.mp3");
+			audio.load();
+			audio.play();
+		}
 	
 	    var isNotValid = function(value) {
 			var isValid = true;
@@ -287,7 +290,7 @@
 					if (self.chosenTeam().report.hasOwnProperty(i))
 						finalReport[i] = self.chosenTeam().report[i]();
 				}
-			//	play();
+				playBieber();
 				$.ajax({
 					url : link,
 					type : "POST",
@@ -427,7 +430,7 @@
 													"Userstory id must begin from US or DE and ends with id number.");
 									if (isValid) {
 										var link = "@{RallyManager.example}?id="
-												+ storyID.val();
+												+ storyID.val() + "&team=" + self.chosenTeam().name;
 
 										$.ajax({
 											url : link,
@@ -523,7 +526,7 @@
 			<tr>
 				<td><img
 					src="https://ssl.gstatic.com/ui/v1/icons/mail/logo_white.png" /></td>
-				<td><a class="blue" href="@{Security.tryAuthGoogle}">Login
+				<td><a id="login" class="blue" href="@{Security.tryAuthGoogle}">Login
 						with google</a></td>
 			</tr>
 		</table>
