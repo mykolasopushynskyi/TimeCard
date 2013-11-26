@@ -25,7 +25,7 @@ public class Team extends Model {
 	@Column(nullable = false, length = 64, unique = true)
 	public String name;
 
-	@OneToOne//(cascade = CascadeType.ALL, mappedBy="team")
+	@OneToOne
 	public Rally rally;
 
 	public Team() {

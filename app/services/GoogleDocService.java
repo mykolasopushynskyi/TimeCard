@@ -82,9 +82,9 @@ public class GoogleDocService {
 			response.addProperty("isError", true);
 			response.addProperty("msg", "Session expired or email is ivalid");
 		}
-
 		return response.toString();
 	}
+	
 
 	private static LinkedList<String> getValues(Params HTTPparams) {
 		LinkedList<String> values = new LinkedList<String>();
