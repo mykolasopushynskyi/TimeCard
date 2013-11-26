@@ -11,8 +11,8 @@ public class RallyManager extends Controller {
 
 	private final static RallyService rally = new RallyService();
 
-	public static void example(String id) {
-		UserStory us = rally.getUserStoryInfo(id);
+	public static void example(String id, String team) {
+		UserStory us = rally.getUserStoryInfo(id, team);
 		
 		JsonObject responce = new JsonObject();
 		
@@ -25,5 +25,4 @@ public class RallyManager extends Controller {
 		
 		renderJSON(new Gson().toJson(responce));
 	}
-
 }

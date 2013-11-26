@@ -2,6 +2,9 @@ package services;
 
 import java.io.IOException;
 
+import models.Rally;
+import models.Team;
+
 import org.apache.commons.lang.StringUtils;
 
 import play.Play;
@@ -15,13 +18,13 @@ import com.ning.http.util.Base64;
 public class RallyService {
 	private final static String RALLY_URL = "https://rally1.rallydev.com/slm/webservice/v2.0/";
 
-	public static UserStory getUserStoryInfo(String rallyId) {
+	public static UserStory getUserStoryInfo(String rallyId, String team) {
 
 		UserStory result = new UserStory();
 		String query = buildUrl(rallyId);
 
 		if (!StringUtils.isBlank(query)) {
-			WS.HttpResponse defect = sendRequest(RALLY_URL + query);
+			WS.HttpResponse defect = sendRequest(RALLY_URL + query, team);
 
 			try {
 				JsonObject fullUserStoryInfo = defect.getJson()
@@ -63,26 +66,19 @@ public class RallyService {
 		return rallyId.matches("^((de)|(DE))[0-9]+$");
 	}
 
-	private static WS.HttpResponse sendRequest(String url) {
-		Properties prop = new Properties();
+	private static WS.HttpResponse sendRequest(String url, String team) {
 
-		try {
-			prop.load(Play.classloader.getResourceAsStream("pass.conf"));
-			String user = prop.get("user");
-			String pass = prop.get("password");
-
-			String auth = "Basic "
-					+ Base64.encode((user + ":" + pass).getBytes());
-
-			WSRequest req = WS.url(url);
-			req.setHeader("Authorization", auth);
-
-			return req.get();
-
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-		return null;
+		Team teamUser = Team.find("name = ?", team).first();
+		
+		String user = teamUser.rally.login;
+		String pass = teamUser.rally.password;
+		
+		String auth = "Basic "
+				+ Base64.encode((user + ":" + pass).getBytes());
+		
+		WSRequest req = WS.url(url);
+		req.setHeader("Authorization", auth);
+		
+		return req.get();
 	}
-
 }
