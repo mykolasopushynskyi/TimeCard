@@ -17,4 +17,5 @@ rallydata.yml
 *.ipr
 *.iml
 idea/
+precompiled/
 

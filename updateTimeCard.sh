@@ -1,7 +1,7 @@
 #! /bin/bash
 PROJECT_DIR='TimeCard';
 
-if [ -d "$PROJECT_DIR"]; then
+if [ -d "$PROJECT_DIR" ]; then
   echo 'Stopping app...'
   cd TimeCard
   play stop
@@ -10,8 +10,12 @@ if [ -d "$PROJECT_DIR"]; then
   rm -rf TimeCard
 fi
 
-if [ -f "master.zip"]; then
+if [ -f "master.zip" ]; then
   rm master.zip
+fi
+
+if [ -d "TimeCard-master" ]; then
+  rm -rf TimeCard-master
 fi
 
 echo 'Downloading sources from repo...'
@@ -25,5 +29,5 @@ cd TimeCard/
 play deps --sync
 play precompile
 
-nohup play start -Dprecompiled=true &
+nohup play start -Dprecompiled=true --%prod &
 
