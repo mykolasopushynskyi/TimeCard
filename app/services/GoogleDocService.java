@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 
 import play.Play;
+import play.mvc.Scope;
 import play.mvc.Scope.Params;
 import play.utils.Properties;
 
@@ -67,6 +68,7 @@ public class GoogleDocService {
 					try {
 						response = save(HTTPparams, service);
 					} catch (Exception ex) {
+						ex.printStackTrace();
 						response.addProperty("isError", true);
 						response.addProperty("msg",
 								"Error during writing to google doc.");
@@ -174,27 +176,11 @@ public class GoogleDocService {
 
 		return row;
 	}
-
+	
 	private static SpreadsheetService getSpreadsheetService() {
 		SpreadsheetService service = new SpreadsheetService("TimeCard");
-		Properties prop = new Properties();
-
-		try {
-			prop.load(Play.classloader.getResourceAsStream("pass.conf"));
-			String user = prop.get("googleacco");
-			String pass = prop.get("googlepass");
-
-			try {
-				service.setUserCredentials(user, pass);
-				service.setProtocolVersion(SpreadsheetService.Versions.V3);
-			} catch (AuthenticationException e) {
-				e.printStackTrace();
-				service = null;
-			}
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			service = null;
-		}
+		service.setHeader("Authorization", "Bearer " + Scope.Session.current().get("token"));
+		service.setProtocolVersion(SpreadsheetService.Versions.V3);
 		return service;
 	}
 

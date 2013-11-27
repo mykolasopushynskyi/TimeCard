@@ -32,7 +32,7 @@ public class GoogleSocial implements Social {
 	public void redirectToSocial() {
 		throw new Redirect(AUTH_URL + "?client_id=" + CLIENT_ID
 				+ "&redirect_uri=" + redirect + "&response_type=code"
-				+ "&scope=https://www.googleapis.com/auth/userinfo.email");
+				+ "&scope=https://www.googleapis.com/auth/userinfo.email https://spreadsheets.google.com/feeds/");
 	}
 
 	@Override
