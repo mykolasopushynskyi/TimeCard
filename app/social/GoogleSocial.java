@@ -7,30 +7,30 @@ import org.apache.commons.lang.StringUtils;
 
 import com.google.gson.JsonObject;
 
+import play.Play;
 import play.libs.WS;
 import play.mvc.Controller;
 import play.mvc.Scope;
 import play.mvc.results.Redirect;
+import play.utils.Properties;
 import controllers.Application;
 
 public class GoogleSocial implements Social {
 
 	private String redirect;
-	private Scope.Session session;
 	
-	public GoogleSocial(Scope.Session session, String redirect) {
+	public GoogleSocial(String redirect) {
 		this.redirect = redirect;
-		this.session = session;
 	}
 
-	public static final String authURL = "https://accounts.google.com/o/oauth2/auth";
-	public static final String tokenURL = "https://accounts.google.com/o/oauth2/token";
-	public static final String clientId = "752848984220.apps.googleusercontent.com";
-	public static final String clientSecret = "xrbD2KH0MWHKxgj2mn2ktlUJ";
+	public static final String AUTH_URL = (String) Play.configuration.getProperty("auth.url", "");
+	public static final String TOKEN_URL = (String) Play.configuration.getProperty("token.url", "");
+	public static final String CLIENT_ID = (String) Play.configuration.getProperty("client.id", "");
+	public static final String CLIENT_SECRET = (String) Play.configuration.getProperty("client.secret", "");
 
 	@Override
 	public void redirectToSocial() {
-		throw new Redirect(authURL + "?client_id=" + clientId
+		throw new Redirect(AUTH_URL + "?client_id=" + CLIENT_ID
 				+ "&redirect_uri=" + redirect + "&response_type=code"
 				+ "&scope=https://www.googleapis.com/auth/userinfo.email");
 	}
@@ -40,12 +40,12 @@ public class GoogleSocial implements Social {
 		if (Scope.Params.current().get("code") != null) {
 			String accessCode = Scope.Params.current().get("code");
 			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("client_id", clientId);
-			params.put("client_secret", clientSecret);
+			params.put("client_id", CLIENT_ID);
+			params.put("client_secret", CLIENT_SECRET);
 			params.put("redirect_uri", redirect);
 			params.put("code", accessCode);
 			params.put("grant_type", "authorization_code");
-			WS.HttpResponse response = WS.url(tokenURL).params(params).post();
+			WS.HttpResponse response = WS.url(TOKEN_URL).params(params).post();
 
 			String accessToken = null;
 
@@ -53,7 +53,7 @@ public class GoogleSocial implements Social {
 
 			if (respObj.has("access_token")) {
 				accessToken = respObj.get("access_token").getAsString();
-				session.put("token", accessToken);
+				Scope.Session.current().put("token", accessToken);
 			}
 
 			Application.index();
@@ -86,11 +86,15 @@ public class GoogleSocial implements Social {
 			WS.url("https://accounts.google.com/o/oauth2/revoke?token=%s",
 					getToken()).post();
 		}
-		session.clear();
+		Scope.Session.current().clear();
 	}
 
 	private String getToken() {
-		String result = session.get("token");
+		String result = null;
+		
+		if (Scope.Session.current() != null) {
+			 result = Scope.Session.current().get("token");
+		}
 
 		if (StringUtils.isBlank(result)) {
 			return null;

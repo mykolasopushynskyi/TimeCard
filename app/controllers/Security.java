@@ -13,11 +13,10 @@ import social.GoogleSocial;
 
 import com.google.gson.JsonObject;
 
-public class Security extends Controller{
+public class Security extends Controller {
 
-	
-	private static GoogleSocial socialGoogle = new GoogleSocial(session, redirectURL());
-	
+	private static GoogleSocial socialGoogle = new GoogleSocial(play.mvc.Router.getFullUrl("Security.authGoogle"));
+
 	public static void logout() {
 		socialGoogle.logout();
 		Application.index();
@@ -30,11 +29,7 @@ public class Security extends Controller{
 	public static void tryAuthGoogle() {
 		socialGoogle.redirectToSocial();
 	}
-
-	static String redirectURL() {
-		return play.mvc.Router.getFullUrl("Security.authGoogle");
-	}
-
+	
 	public static boolean isLogged() {
 		return socialGoogle.isLogged();
 	}

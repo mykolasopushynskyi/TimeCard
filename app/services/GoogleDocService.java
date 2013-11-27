@@ -29,8 +29,10 @@ import controllers.Security;
 
 public class GoogleDocService {
 
-	private static final String SPREADSHEET_KEY = "0AsiyXCOmDCswdHNSUHlLNmtoMkZjdjVZWUJ3bUhMekE";
-	private static final String WORKSHEET = "Polaris";
+	private static final String SPREADSHEET_KEY = (String) Play.configuration
+			.getProperty("spreadsheet.key", "");
+	private static final String WORKSHEET = (String) Play.configuration
+			.getProperty("worksheet.name", "");
 
 	// names of httpParametrs (duplicate ones in js of index page)
 	private final static String[] REPORT_PARAMS = { "rework", "maintenance",
@@ -84,7 +86,6 @@ public class GoogleDocService {
 		}
 		return response.toString();
 	}
-	
 
 	private static LinkedList<String> getValues(Params HTTPparams) {
 		LinkedList<String> values = new LinkedList<String>();
