@@ -10,3 +10,11 @@ logs
 modules
 pass.conf
 initial-data.yml
+*.log
+rallydata.yml
+
+*.iws
+*.ipr
+*.iml
+idea/
+

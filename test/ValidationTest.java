@@ -6,9 +6,7 @@ import play.test.UnitTest;
 import services.ReportDataValidation;
 
 public class ValidationTest extends UnitTest {
-	/**
-     * 
-     */
+
 	@Test
 	public void isValidFieldTest() {
 
@@ -55,7 +53,7 @@ public class ValidationTest extends UnitTest {
 		assertFalse(v.validateReportHours(l1));
 		assertFalse(v.validateReportHours(l2));
 		assertFalse(v.validateReportHours(null));
-		
+
 		assertTrue(v.validateReportHours(l0));
 		assertTrue(v.validateReportHours(l3));
 	}
