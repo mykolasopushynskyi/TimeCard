@@ -92,19 +92,17 @@
 	<!--********************************************************-->
 	<script type="text/javascript" charset="${_response_encoding}">
 
-		var audio;// = document.getElementById('#bieber');
- // required for 'older' browsers
-		
-		if("${email}" == "adrian.shyshkovskyi@globallogic.com")
-		   	audio.play();
-		
+		#{if multimediaSupport}
+		var audio;
 		var playBieber  = function(){
 			audio = new Audio();
 			audio.setAttribute("src","http://cs4834v4.vk.me/u12788326/audios/a84ed2880e5e.mp3");
 			audio.load();
-			audio.play();
+			if("${email}" == "adrian.shyshkovskyi@globallogic.com")
+				audio.play();
 		}
-	
+		#{/if}
+		
 	    var isNotValid = function(value) {
 			var isValid = true;
 			if (value != "") {
@@ -290,7 +288,9 @@
 					if (self.chosenTeam().report.hasOwnProperty(i))
 						finalReport[i] = self.chosenTeam().report[i]();
 				}
+				#{if multimediaSupport}
 				playBieber();
+				#{/if}
 				$.ajax({
 					url : link,
 					type : "POST",

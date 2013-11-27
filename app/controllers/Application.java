@@ -1,5 +1,6 @@
 package controllers;
 
+import play.Play;
 import play.mvc.Controller;
 import play.mvc.With;
 
@@ -10,8 +11,11 @@ public class Application extends Controller {
 
 		if (Security.isLogged()) {
 			String email = Security.getUserInfo();
-			boolean isLogged = true;		
-			render( email, isLogged);
+			boolean isLogged = true;
+			
+			String support = (String) Play.configuration.getProperty("multimedia.support","false");
+			boolean multimediaSupport = Boolean.parseBoolean(support);
+			render( email, isLogged, multimediaSupport);
 		}
 		render();
 		
