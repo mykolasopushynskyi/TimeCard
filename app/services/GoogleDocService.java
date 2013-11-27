@@ -66,8 +66,7 @@ public class GoogleDocService {
 				if (validator.validateReportHours(getValues(HTTPparams))) {
 					try {
 						response = save(HTTPparams, service);
-					} catch (IOException | ServiceException
-							| NullPointerException e1) {
+					} catch (Exception ex) {
 						response.addProperty("isError", true);
 						response.addProperty("msg",
 								"Error during writing to google doc.");
