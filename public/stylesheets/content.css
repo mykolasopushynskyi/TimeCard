@@ -2,20 +2,104 @@
 	float: left;
 	width: 70%;
 	background: rgb(107, 186, 112); /* Old browsers */
-	background: -moz-linear-gradient(left, rgba(107, 186, 112, 1) 0%, rgba(107, 186, 112, 1) 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, right top, color-stop(0%, rgba(107, 186, 112, 1)), color-stop(100%, rgba(107, 186, 112, 1)));
+	background: -moz-linear-gradient(left, rgba(107, 186, 112, 1) 0%,
+		rgba(107, 186, 112, 1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%, rgba(107,
+		186, 112, 1)), color-stop(100%, rgba(107, 186, 112, 1)));
 	/* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(left, rgba(107, 186, 112, 1) 0%, rgba(107, 186, 112, 1) 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(left, rgba(107, 186, 112, 1) 0%, rgba(107, 186, 112, 1) 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(left, rgba(107, 186, 112, 1) 0%, rgba(107, 186, 112, 1) 100%); /* IE10+ */
-	background: linear-gradient(to right, rgba(107, 186, 112, 1) 0%, rgba(107, 186, 112, 1) 100%); /* W3C */
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#6bba70', endColorstr = '#6bba70', GradientType = 1); /* IE6-9 */
+	background: -webkit-linear-gradient(left, rgba(107, 186, 112, 1) 0%,
+		rgba(107, 186, 112, 1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(left, rgba(107, 186, 112, 1) 0%,
+		rgba(107, 186, 112, 1) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(left, rgba(107, 186, 112, 1) 0%,
+		rgba(107, 186, 112, 1) 100%); /* IE10+ */
+	background: linear-gradient(to right, rgba(107, 186, 112, 1) 0%,
+		rgba(107, 186, 112, 1) 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr= '#6bba70',
+		endColorstr= '#6bba70', GradientType= 1); /* IE6-9 */
 }
 
 #content table {
 	float: left;
+	padding: 10px;
 }
 
+#content input {
+	height: 30px;
+	border: 0;
+	color: rgba(255, 255, 255, 0.9);
+	background: #45774C;
+	font-size: 16px;
+	padding-left: 5px;
+}
+
+#content option {
+	font-family: Arial, Helvetica, sans-serif;
+	text-align: left;
+	font-size: 14px;
+}
+
+#content input {
+	width: 180px;
+}
+   
+#overselector {
+	overflow: hidden;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	border-color: rgba(255, 255, 255, 0.5);
+	width: 330px;
+	height: 25px;
+	margin-top: 7px;
+	margin-left: 15%;
+	text-align: left;
+	font-size: 12px;
+	float: left;
+	font-family: Arial, Helvetica, sans-serif;
+	-webkit-box-shadow: 0px 0px 5px 1px #000000;
+	box-shadow: 0px 0px 5px 1px #000000;
+	background:
+	url(http://cdn.bavotasan.com/wp-content/uploads/2011/05/down_arrow_select.jpg)
+	no-repeat right #ffffff;
+}
+/*
+#overselector:before{
+	height: 34px;
+	margin-top: 7px;
+	margin-left: 15%;
+	width: 330px;
+	height: 25px;
+	overflow: hidden;
+	pointer-events: none;
+	background:
+		url(http://cdn.bavotasan.com/wp-content/uploads/2011/05/down_arrow_select.jpg)
+		no-repeat right #ffffff;
+}
+*/
+#content select {
+	vertical-align: middle;
+	background: transparent;
+	width : 350px;
+	padding: 5px;
+	font-size: 12px;
+	line-height: 1;
+	border: 0;
+	border-radius: 0;
+	height: 25px;
+	-webkit-appearance: none;
+}
+
+#content td {
+	text-align: right;
+	letter-spacing: 1px;
+	font-size: 16px;
+	line-height: 20px;
+	padding-left: 10px;
+	color: rgba(255, 255, 255, 0.9);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 
 #content .login {
 	display: table;
@@ -40,72 +124,33 @@
 	padding-left: 4px;
 }
 
-#content table {
-	padding: 10px;
-}
-
-#content .errorMessage, .warningMessage, .successMessage{
+#content .errorMessage,.warningMessage,.successMessage {
 	width: 25%;
 	float: right;
 	border: 1px solid;
-	padding:10px;
-	margin-right:40px;
-	margin-top:10px;
-	float:right;
+	padding: 10px;
+	margin-right: 40px;
+	margin-top: 10px;
+	float: right;
 }
 
-#content .errorMessage{
+#content .errorMessage {
 	color: #9F0000;
 	background-color: #FEB3B3;
 }
 
-#content .warningMessage{
+#content .warningMessage {
 	color: #9F6000;
 	background-color: #FEEFB3;
 }
 
-#content .successMessage{
+#content .successMessage {
 	color: #609F00;
 	background-color: #B3FEB3;
 }
 
 #content .errorField {
 	background-color: #885555;
-}
-
-#content input {
-	height: 30px;
-	border: 0;
-	color: rgba(255, 255, 255, 0.9);
-	background: #45774C;
-	font-size: 16px;
-	padding-left: 5px;
-}
-
-#content td {
-	text-align: right;
-	letter-spacing: 1px;
-	font-size: 16px;
-	line-height: 20px;
-	padding-left: 10px;
-	color: rgba(255, 255, 255, 0.9);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-#content .selector {
-	-webkit-border-radius: 3px;
-	border-radius: 3px;
-	border-color: rgba(255, 255, 255, 0.5);
-	width: 50%;
-	height: 25px;
-	text-align: center;
-	background-color: rgba(255, 255, 255, 0.9);
-	letter-spacing: 1px;
-	font-size: 12px;
-	-webkit-box-shadow: 0px 0px 5px 1px #000000;
-	box-shadow: 0px 0px 5px 1px #000000;
 }
 
 #content .frm {
@@ -131,6 +176,7 @@
 	letter-spacing: 1px;
 	font-size: 16px;
 	line-height: 20px;
+	vertical-align: middle;
 	cursor: pointer;
 	background: #45774C;
 	color: rgba(255, 255, 255, 0.6);
@@ -143,11 +189,13 @@
 #content .button:disabled {
 	background: #555555;
 }
+
 #content .button:disabled:hover {
 	color: rgba(255, 255, 255, 0.6);
 	border-left-color: rgba(255, 255, 255, 0.6);
 	background: #555555;
 }
+
 #content .button:hover {
 	color: #ffffff;
 	border-left-color: #ffffff;

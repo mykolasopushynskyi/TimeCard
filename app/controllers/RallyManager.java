@@ -17,9 +17,11 @@ public class RallyManager extends Controller {
 		JsonObject responce = new JsonObject();
 		
 		if (us != null) {
+			response.status = 200;
 			responce.addProperty("rallyId", us.getRallyId());
 			responce.addProperty("name", us.getName());
 		} else {
+			response.status = 404;
 			responce.addProperty("error", "User story not found!");
 		}
 		

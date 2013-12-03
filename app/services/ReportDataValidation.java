@@ -121,11 +121,8 @@ public class ReportDataValidation {
 		return result;
 	}
 
-	public boolean isValidCredentials(String mail) {
+	public boolean isValidMail(String mail) {
 		boolean isValid = true;
-
-		// is user logged in app
-		isValid = isValid && Security.isLogged();
 		// is email matches
 		isValid = isValid && Security.getUserInfo().equals(mail);
 		// is mail is GlobalLogic email

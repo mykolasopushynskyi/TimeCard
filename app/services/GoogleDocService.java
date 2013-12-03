@@ -57,35 +57,53 @@ public class GoogleDocService {
 	private static FeedURLFactory urlFactory = FeedURLFactory.getDefault();
 	private static ReportDataValidation validator = new ReportDataValidation();
 
-	public static String saveReport(Params HTTPparams) {
+	public static Responce saveReport(Params HTTPparams) throws IOException,
+			ServiceException {
 
-		JsonObject response = new JsonObject();
 		SpreadsheetService service = getSpreadsheetService();
+		Responce saveResponse = new Responce();
+		
+		String responseText;
+		int responseCode;
+		boolean saveStoryTine;
 
-		if (validator.isValidCredentials(HTTPparams.get("mail"))) {
+		if (validator.isValidMail(HTTPparams.get("mail"))) {
 			if (validator.validateFields(HTTPparams, REPORT_PARAMS)) {
 				if (validator.validateReportHours(getValues(HTTPparams))) {
-					try {
-						response = save(HTTPparams, service);
-					} catch (Exception ex) {
-						ex.printStackTrace();
-						response.addProperty("isError", true);
-						response.addProperty("msg",
-								"Error during writing to google doc.");
+					
+					if (!StringUtils.isBlank(HTTPparams.get("storyTime"))) {
+						if (validator.validateStoryTime(
+								HTTPparams.get("storyTime"),
+								HTTPparams.get("usId"),
+								HTTPparams.get("usName"))) {
+							saveStoryTine = true;
+							responseText = save(HTTPparams, service, saveStoryTine);
+							responseCode = 200;
+						} else {
+							responseText = "Server: Can't save story time";
+							responseCode = 400;
+						}
+					} else {
+						saveStoryTine = false;
+						responseText = save(HTTPparams, service, saveStoryTine);
+						responseCode = 200;
 					}
+					
 				} else {
-					response.addProperty("isError", true);
-					response.addProperty("msg", "Hours sum vslidation failed.");
+					responseText = "Server: Hours sum validation failed.";
+					responseCode = 400;
 				}
 			} else {
-				response.addProperty("isError", true);
-				response.addProperty("msg", "Not all fiels is valid.");
+				responseText = "Server: Not all fiels is valid.";
+				responseCode = 400;
 			}
 		} else {
-			response.addProperty("isError", true);
-			response.addProperty("msg", "Session expired or email is ivalid");
+			responseText = "Server: Email is invalid";
+			responseCode = 400;
 		}
-		return response.toString();
+		saveResponse.setStatusCode(responseCode);
+		saveResponse.setMessage(responseText);
+		return saveResponse;
 	}
 
 	private static LinkedList<String> getValues(Params HTTPparams) {
@@ -103,20 +121,12 @@ public class GoogleDocService {
 		return values;
 	}
 
-	private static JsonObject save(Params HTTPparams, SpreadsheetService service)
-			throws IOException, ServiceException, NullPointerException {
+	private static String save(Params HTTPparams, SpreadsheetService service,
+			boolean saveStoryTime) throws IOException, ServiceException {
 
 		ListEntry row;
 		String paramValue;
 		String paramType;
-
-		String storyTime = HTTPparams.get("storyTime");
-		String storyId = HTTPparams.get("usId");
-		String storyName = HTTPparams.get("usName");
-
-		JsonObject response = new JsonObject();
-		response.addProperty("isError", false);
-		response.addProperty("msg", "Saving is successfull!");
 
 		URL workSheetUrl = findWorksheet(service).getListFeedUrl();
 
@@ -131,17 +141,12 @@ public class GoogleDocService {
 		}
 
 		// add story time parameter
-		if (!StringUtils.isBlank(HTTPparams.get("storyTime"))) {
-			if (validator.validateStoryTime(storyTime, storyId, storyName)) {
-				row = createStoryTimeEntry(HTTPparams);
-				row = service.insert(workSheetUrl, row);
-			} else {
-				response.addProperty("isError", true);
-				response.addProperty("msg", "Can't save story time.");
-			}
+		if (saveStoryTime) {
+			row = createStoryTimeEntry(HTTPparams);
+			row = service.insert(workSheetUrl, row);
 		}
 
-		return response;
+		return "Saving is successful!";
 	}
 
 	private static String getDate() {
@@ -176,10 +181,11 @@ public class GoogleDocService {
 
 		return row;
 	}
-	
+
 	private static SpreadsheetService getSpreadsheetService() {
 		SpreadsheetService service = new SpreadsheetService("TimeCard");
-		service.setHeader("Authorization", "Bearer " + Scope.Session.current().get("token"));
+		service.setHeader("Authorization", "Bearer "
+				+ Scope.Session.current().get("token"));
 		service.setProtocolVersion(SpreadsheetService.Versions.V3);
 		return service;
 	}

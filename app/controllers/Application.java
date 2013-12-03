@@ -18,6 +18,5 @@ public class Application extends Controller {
 			render( email, isLogged, multimediaSupport);
 		}
 		render();
-		
 	}
 }

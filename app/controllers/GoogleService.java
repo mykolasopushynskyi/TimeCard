@@ -12,8 +12,10 @@ import org.apache.commons.lang.StringUtils;
 
 import play.Play;
 import play.mvc.Controller;
+import play.mvc.Http.StatusCode;
 import play.utils.Properties;
 import services.GoogleDocService;
+import services.Responce;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
@@ -27,14 +29,29 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class GoogleService extends Controller {
-	
+
 	public static final GoogleDocService service = new GoogleDocService();
 
 	public static void report() {
+		Responce saveResponse = new Responce() ;
+
+		if (Security.isLogged()) {
+			try {
+				saveResponse = service.saveReport(params);
+				response.status = saveResponse.getStatusCode();
+			} catch (IOException e) {
+				response.status = 503;
+				saveResponse.setMessage("Server: Error during writing to google doc.");
+			} catch (ServiceException e) {
+				response.status = 503;
+				saveResponse.setMessage("Server: Error during writing to google doc.");
+				e.printStackTrace();
+			}
+		} else {
+			saveResponse.setMessage("Server: User is not logged.");
+			response.status = 403;
+		}
 		
-		String responce = service.saveReport(params);
-		
-		renderJSON(responce);
-		
+		renderText(saveResponse.getMessage());
 	}
 }
