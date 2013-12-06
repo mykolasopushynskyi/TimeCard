@@ -92,19 +92,6 @@ select {
 	pointer-events: none;
 }
 
-#content select {
-	vertical-align: middle;
-	background: transparent;
-	width: 350px;
-	padding: 5px;
-	font-size: 12px;
-	line-height: 1;
-	border: 0;
-	border-radius: 0;
-	height: 25px;
-	-webkit-appearance: none;
-}
-
 #content option {
 	font-family: Arial, Helvetica, sans-serif;
 	text-align: left;
