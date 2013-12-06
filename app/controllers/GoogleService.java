@@ -1,57 +1,82 @@
 package controllers;
 
 import java.io.IOException;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.LinkedList;
+import java.lang.reflect.Field;
 
-import org.apache.commons.lang.math.NumberUtils;
-import org.apache.commons.lang.StringUtils;
+import javax.inject.Inject;
 
-import play.Play;
+import play.mvc.Catch;
 import play.mvc.Controller;
-import play.mvc.Http.StatusCode;
-import play.utils.Properties;
 import services.GoogleDocService;
-import services.Responce;
+import validation.ReportFormBean;
+import validation.ValidationResult;
 
-import com.google.gdata.client.spreadsheet.FeedURLFactory;
-import com.google.gdata.client.spreadsheet.SpreadsheetService;
-import com.google.gdata.data.spreadsheet.ListEntry;
-import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
-import com.google.gdata.data.spreadsheet.SpreadsheetFeed;
-import com.google.gdata.data.spreadsheet.WorksheetEntry;
-import com.google.gdata.util.AuthenticationException;
 import com.google.gdata.util.ServiceException;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 public class GoogleService extends Controller {
 
-	public static final GoogleDocService service = new GoogleDocService();
+	@Inject
+	public static GoogleDocService service;
 
-	public static void report() {
-		Responce saveResponse = new Responce() ;
+	public static void report() throws IOException, ServiceException,
+			IllegalArgumentException, IllegalAccessException,
+			NoSuchFieldException, SecurityException {
+
+		ValidationResult validationResponse = new ValidationResult();
+
+		String responceMessage = "Server: Saving is successfull";
+		response.status = 200;
 
 		if (Security.isLogged()) {
-			try {
-				saveResponse = service.saveReport(params);
-				response.status = saveResponse.getStatusCode();
-			} catch (IOException e) {
-				response.status = 503;
-				saveResponse.setMessage("Server: Error during writing to google doc.");
-			} catch (ServiceException e) {
-				response.status = 503;
-				saveResponse.setMessage("Server: Error during writing to google doc.");
-				e.printStackTrace();
+			ReportFormBean report = getReport();
+			validationResponse = service
+					.saveReport(report, Security.getToken());
+
+			if (validationResponse.hasErrors()) {
+				responceMessage = validationResponse.toString();
+				response.status = 400;
 			}
+
 		} else {
-			saveResponse.setMessage("Server: User is not logged.");
+			validationResponse.addGlobalError("Server: User is not logged.");
 			response.status = 403;
+			responceMessage = validationResponse.toString();
 		}
-		
-		renderText(saveResponse.getMessage());
+		renderText(responceMessage);
+	}
+
+	private static ReportFormBean getReport() throws IllegalAccessException,
+			NoSuchFieldException, SecurityException {
+		ReportFormBean report = new ReportFormBean();
+
+		Class<?> reportClass = ReportFormBean.class;
+		Field parField;
+
+		String paramValue;
+		for (String paramName : params.all().keySet()) {
+
+			paramValue = params.get(paramName);
+
+			if (!paramName.equals("body")) {
+				parField = reportClass.getDeclaredField(paramName);
+				parField.set(report, paramValue);
+			}
+		}
+
+		return report;
+	}
+
+	@Catch({ IllegalArgumentException.class, IllegalAccessException.class,
+			NoSuchFieldException.class, SecurityException.class })
+	public static void catchBadData(Throwable t) {
+		response.status = 400;
+		renderText("Server: Invalid request.");
+	}
+
+	@Catch({ IOException.class, ServiceException.class })
+	public static void catchServiceUnavailable(Throwable t) {
+		t.printStackTrace();
+		response.status = 503;
+		renderText("Server: Error during writing to google doc.");
 	}
 }

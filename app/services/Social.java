@@ -1,4 +1,4 @@
-package social;
+package services;
 
 public interface Social {
 

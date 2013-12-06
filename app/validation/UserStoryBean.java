@@ -1,6 +1,6 @@
-package services;
+package validation;
 
-public class UserStory {
+public class UserStoryBean {
 
 	private String rallyId;
 	private String name;
@@ -17,5 +17,4 @@ public class UserStory {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
 }

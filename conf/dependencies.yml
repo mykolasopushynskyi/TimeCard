@@ -1,6 +1,6 @@
 # Application dependencies
 
 require:
-    - play
+    - play -> guice 1.2
     - com.google.guava -> guava 15.0
     - com.google.gdata -> core 1.47.1

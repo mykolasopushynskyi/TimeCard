@@ -11,6 +11,7 @@ import play.Play;
 import play.libs.WS;
 import play.libs.WS.WSRequest;
 import play.utils.Properties;
+import validation.UserStoryBean;
 
 import com.google.gson.JsonObject;
 import com.ning.http.util.Base64;
@@ -18,9 +19,9 @@ import com.ning.http.util.Base64;
 public class RallyService {
 	private final static String RALLY_URL = "https://rally1.rallydev.com/slm/webservice/v2.0/";
 
-	public static UserStory getUserStoryInfo(String rallyId, String team) {
+	public static UserStoryBean getUserStoryInfo(String rallyId, String team) {
 
-		UserStory result = new UserStory();
+		UserStoryBean result = new UserStoryBean();
 		String query = buildUrl(rallyId);
 
 		if (!StringUtils.isBlank(query)) {

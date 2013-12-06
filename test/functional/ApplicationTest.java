@@ -1,3 +1,4 @@
+package functional;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Test;

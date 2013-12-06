@@ -1,18 +1,21 @@
 package controllers;
 
+import javax.inject.Inject;
+
 import play.mvc.Controller;
 import services.RallyService;
-import services.UserStory;
+import validation.UserStoryBean;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 public class RallyManager extends Controller {
 
-	private final static RallyService rally = new RallyService();
+	@Inject
+	private static RallyService rally;
 
 	public static void example(String id, String team) {
-		UserStory us = rally.getUserStoryInfo(id, team);
+		UserStoryBean us = rally.getUserStoryInfo(id, team);
 		
 		JsonObject responce = new JsonObject();
 		

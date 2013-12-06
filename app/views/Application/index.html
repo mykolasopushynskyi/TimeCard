@@ -110,7 +110,7 @@
                         var isValid = true;
                         if (value != "") {
                                 var reg = /^\d{0,2}(\.\d{0,2}){0,1}$/;
-                                isValid = isValid && reg.test(value) && parseFloat(value) >= 0
+                                isValid = isValid && reg.test(value) && parseFloat(value) > 0
                                                 && parseFloat(value) <= 24;
                         }
                         return !isValid;
@@ -176,63 +176,62 @@
                         self.chosenTeam = ko.observable(createTeamModel());
                         self.respMessage = ko.observable("");
 
-                        self.summaryValid = ko
-                                        .computed(function() {
-                                                var rep = self.chosenTeam().report;
-                                                var isValid = true;
-
-                                                for (i in rep)
-                                                        isValid = isValid && !isNotValid(rep[i]());
-
-                                                var sum = 0;
-                                                var x = 0;
-                                                var message = "";
-
-                                                for (i in rep) {
-                                                        x = parseFloat(rep[i]());
-                                                        if (!isNaN(x))
-                                                                sum += x;
-                                                }
-                                                
-                                                if (!isValid) {
-                                                        self.isValid(false);
-                                                        $("#validationWarning").hide(500);
-                                                        $("#validationError").show(500);
-                                                        return "Not all fiels is valid!";
-                                                } else if (sum > 24) {
-                                                        self.isValid(false);
-                                                        $("#validationWarning").hide(500);
-                                                        $("#validationError").show(500);
-                                                        message = sum + " hours spended. You cant work more than 24 hours.";                                        
-                                                } else if (self.chosenTeam().story() != undefined
-                                                                        && self.chosenTeam().report != undefined
-                                                                        && self.chosenTeam().story().id == "-"
-                                                                        && self.chosenTeam().report["storyTime"]() != "") {
-                                                                self.isValid(false);
-                                                                $("#validationWarning").hide(500);
-                                                                $("#validationError").show(500);
-                                                                message = "Choose userstory to save story time.";
-                                                } else if (sum > 8 && sum <= 24) {
-                                                        self.isValid(true);
-                                                        $("#validationError").hide(500);
-                                                        $("#validationWarning").show(500);
-                                                        message = "Are you really work " + sum + " hours?";
-                                                } else if (sum < 8 && sum != 0) {
-                                                        self.isValid(true);
-                                                        $("#validationError").hide(500);
-                                                        $("#validationWarning").show(500);
-                                                        message = sum + " hours spent. Maybe you need more work.";
-                                                } else if (sum == 0) {
-                                                        self.isValid(false);
-                                                        $("#validationError").hide(500);
-                                                        $("#validationWarning").hide(500);
-                                                } else {
-                                                        self.isValid(true);
-                                                        $("#validationError").hide(500);
-                                                        $("#validationWarning").hide(500);
-                                                }
-                                                return message;
-                                        });
+                        self.summaryValid = ko.computed(function() {
+	                        var rep = self.chosenTeam().report;
+	                        var isValid = true;
+	
+	                        for (i in rep)
+	                                isValid = isValid && !isNotValid(rep[i]());
+	
+	                        var sum = 0;
+	                        var x = 0;
+	                        var message = "";
+	
+	                        for (i in rep) {
+	                                x = parseFloat(rep[i]());
+	                                if (!isNaN(x))
+	                                        sum += x;
+	                        }
+	                        
+	                        if (!isValid) {
+	                                self.isValid(false);
+	                                $("#validationWarning").hide(500);
+	                                $("#validationError").show(500);
+	                                return "Not all fiels is valid!";
+	                        } else if (sum > 24) {
+	                                self.isValid(false);
+	                                $("#validationWarning").hide(500);
+	                                $("#validationError").show(500);
+	                                message = sum + " hours spended. You cant work more than 24 hours.";                                        
+	                        } else if (self.chosenTeam().story() != undefined
+	                                                && self.chosenTeam().report != undefined
+	                                                && self.chosenTeam().story().id == "-"
+	                                                && self.chosenTeam().report["storyTime"]() != "") {
+	                                        self.isValid(false);
+	                                        $("#validationWarning").hide(500);
+	                                        $("#validationError").show(500);
+	                                        message = "Choose userstory to save story time.";
+	                        } else if (sum > 8 && sum <= 24) {
+	                                self.isValid(true);
+	                                $("#validationError").hide(500);
+	                                $("#validationWarning").show(500);
+	                                message = "Are you really work " + sum + " hours?";
+	                        } else if (sum < 8 && sum != 0) {
+	                                self.isValid(true);
+	                                $("#validationError").hide(500);
+	                                $("#validationWarning").show(500);
+	                                message = sum + " hours spent. Maybe you need more work.";
+	                        } else if (sum == 0) {
+	                                self.isValid(false);
+	                                $("#validationError").hide(500);
+	                                $("#validationWarning").hide(500);
+	                        } else {
+	                                self.isValid(true);
+	                                $("#validationError").hide(500);
+	                                $("#validationWarning").hide(500);
+	                        }
+	                        return message;
+	                	});
 
                         //get teamlist
                         self.updateTeamList = function() {
@@ -303,6 +302,12 @@
                                         beforeSend : function() {
                                                 self.isSaveEnabled(false);
                                                 showReportLoader(true);
+                                        },
+                                        success: function(data) {
+                                        	
+                                        },
+                                        error: function(status, error) {
+                                        	
                                         },
                                         complete: function(xhr, ajaxOptions) {
                                         		self.respMessage(xhr.responseText);

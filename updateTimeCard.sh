@@ -26,7 +26,7 @@ unzip -q master.zip
 mv TimeCard-master/ TimeCard
 
 cd TimeCard/
-play deps --sync
+play deps --sync --forProd
 play precompile
 
 nohup play start -Dprecompiled=true --%prod &
