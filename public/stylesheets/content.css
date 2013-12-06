@@ -34,74 +34,81 @@
 	width: 180px;
 }
 
-/* The CSS */
 select {
-	font:12px "Consolas", monospace;
-	width:350px;
-	height:25px;
-    padding:3px;
-    margin: 0;
-    -webkit-border-radius:3px;
-    -moz-border-radius:3px;
+	font: 12px "Consolas", monospace;
+	width: 350px;
+	height: 25px;
+	padding: 5px;
+	margin: 0;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
 	border-radius: 3px;
 	border: none;
 	-webkit-border-radius: 3px;
-	-webkit-box-shadow: 0px 0px 5px 1px #000000;
-	-moz-box-shadow: 0px 0px 5px 1px #000000;
-	box-shadow: 0px 0px 5px 1px #000000;
-    border:none;
-    outline:none;
-	background:#ffffff;
-    display: inline-block;
-    -webkit-appearance:none;
-    -moz-appearance:none;
-    appearance:none;
-    cursor:pointer;
+	border: none;
+	outline: none;
+	background: #ffffff;
+	display: inline-block;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	cursor: pointer;
 }
 
-/* Targetting Webkit browsers only. FF will show the dropdown arrow with so much padding. */
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-    select {padding-right:18px}
-}
-
-label {position:relative}
-label:after {
-    content:'>';
-    font:16px "Consolas", monospace;
-    -webkit-transform:rotate(90deg);
-    -moz-transform:rotate(90deg);
-    -ms-transform:rotate(90deg);
-    transform:rotate(90deg);
-    right:8px;
-    top:-2px;
-
-    padding:0 0 2px;
-    position:absolute;
-    pointer-events:none;
-}
-label:before {
-
+#overselector {
+	overflow: hidden;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
 	border-radius: 3px;
-    content:'';
-    right:4px; 
-    top:-2px;
-    width:20px; height:20px;
-    background:#f8f8f8;
-    position:absolute;
-    pointer-events:none;
-    display:block;
+	border-radius: 3px;
+	border-color: rgba(255, 255, 255, 0.5);
+	width: 330px;
+	height: 25px;
+	margin-top: 7px;
+	margin-left: 15%;
+	text-align: left;
+	font-size: 12px;
+	float: left;
+	background: #ffffff;
+	font-family: Arial, Helvetica, sans-serif;
+	-webkit-box-shadow: 0px 0px 5px 1px #000000;
+	box-shadow: 0px 0px 5px 1px #000000;
+	font-family: Arial, Helvetica, sans-serif;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 }
 
+#overselector:before {
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	position: absolute;
+	content: '';
+	background:
+		url(http://cdn.bavotasan.com/wp-content/uploads/2011/05/down_arrow_select.jpg)
+		no-repeat right;
+	width: 330px;
+	height: 25px;
+	pointer-events: none;
+}
 
+#content select {
+	vertical-align: middle;
+	background: transparent;
+	width: 350px;
+	padding: 5px;
+	font-size: 12px;
+	line-height: 1;
+	border: 0;
+	border-radius: 0;
+	height: 25px;
+	-webkit-appearance: none;
+}
 
 #content option {
 	font-family: Arial, Helvetica, sans-serif;
 	text-align: left;
 	font-size: 14px;
-}
-
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-    select {padding-right:18px}
 }
 
 #content td {
@@ -185,6 +192,7 @@ label:before {
 	height: 30px;
 	width: 150px;
 	margin: 5px;
+	float:left;
 	vertical-align: middle;
 	text-align: left;
 	letter-spacing: 1px;

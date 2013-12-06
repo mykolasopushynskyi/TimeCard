@@ -27,18 +27,18 @@
 
         <form id="mainform" method="post" action="saveData">
                 <div class="frm">
-                	<label>
-                        <select data-bind="options: $root.chosenTeam().storyList(), optionsText: 
+                    <div id="overselector">
+                        <select
+                                data-bind="options: $root.chosenTeam().storyList(), optionsText: 
                         function(item)
                         {
                                 return item.id + ' ' + item.desc;
                         },
                         value: $root.chosenTeam().story
-                        " >
-                        </select>
-                    </label>
-
-                        <input id="opener" class="button" type="button" value="Find user story" ></input>
+                        " /></select>
+                     </div>
+                        <input id="opener" class="button" type="button"
+                                value="Find user story" />
                 </div>
                 <div>
                         <table data-bind="foreach: reportEntries">
