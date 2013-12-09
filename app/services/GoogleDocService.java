@@ -114,7 +114,7 @@ public class GoogleDocService {
 		}
 	}
 
-	private static String getDate() {
+	public static String getDate() {
 		Calendar calendar = Calendar.getInstance();
 		return dateFormat.format(calendar.getTime());
 	}
@@ -165,7 +165,7 @@ public class GoogleDocService {
 				for (WorksheetEntry worksheet : spreadsheet.getWorksheets()) {
 					if (worksheet.getTitle().getPlainText()
 							.equalsIgnoreCase(workSheetName)) {
-						writeHeader(service, worksheet);
+						//writeHeader(service, worksheet);
 						return worksheet;
 					}
 				}
@@ -203,24 +203,16 @@ public class GoogleDocService {
 			WorksheetEntry worksheet) throws IOException, ServiceException {
 		URL cellFeedUrl = worksheet.getCellFeedUrl();
 		CellFeed cellFeed =  service.getFeed(cellFeedUrl, CellFeed.class);
-		CellEntry cellEntry;
 		
-		cellEntry = new CellEntry(1, 1, ITERATION);
-		cellFeed.insert(cellEntry);
-		cellEntry = new CellEntry(1, 2, TEAM);
-		cellFeed.insert(cellEntry);
-		cellEntry = new CellEntry(1, 3, TIME_STAMP);
-		cellFeed.insert(cellEntry);
-		cellEntry = new CellEntry(1, 4, USER_NAME);
-		cellFeed.insert(cellEntry);
-		cellEntry = new CellEntry(1, 5, RALYY_ID);
-		cellFeed.insert(cellEntry);
-		cellEntry = new CellEntry(1, 6, STORY_NAME);
-		cellFeed.insert(cellEntry);
-		cellEntry = new CellEntry(1, 7, HOURS);
-		cellFeed.insert(cellEntry);
-		cellEntry = new CellEntry(1, 8, TYPE);
-		cellFeed.insert(cellEntry);
+		cellFeed.insert(new CellEntry(1, 1, ITERATION));
+		
+		cellFeed.insert(new CellEntry(1, 2, TEAM));
+		cellFeed.insert(new CellEntry(1, 3, TIME_STAMP));
+		cellFeed.insert(new CellEntry(1, 4, USER_NAME));
+		cellFeed.insert(new CellEntry(1, 5, RALYY_ID));
+		cellFeed.insert(new CellEntry(1, 6, STORY_NAME));
+		cellFeed.insert(new CellEntry(1, 7, HOURS));
+		cellFeed.insert(new CellEntry(1, 8, TYPE));
 	}
 
 	private static boolean saveRowEntry(URL workSheetUrl,
