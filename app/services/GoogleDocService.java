@@ -6,6 +6,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 
 import org.apache.commons.lang.StringUtils;
@@ -17,38 +18,44 @@ import validation.ReportFormBean;
 import validation.ReportFormValidator;
 import validation.ValidationResult;
 
+import com.google.gdata.client.spreadsheet.CellQuery;
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
+import com.google.gdata.data.PlainTextConstruct;
+import com.google.gdata.data.spreadsheet.CellEntry;
+import com.google.gdata.data.spreadsheet.CellFeed;
 import com.google.gdata.data.spreadsheet.ListEntry;
 import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
 import com.google.gdata.data.spreadsheet.SpreadsheetFeed;
 import com.google.gdata.data.spreadsheet.WorksheetEntry;
 import com.google.gdata.util.ServiceException;
 
-// names of headers in spreadsheet
-// don't use white spaces in this names and headers names in spreadsheet
-// Also you need to create google spreadsheet with HEADER ROW labeled by the
-// following captions
-// { "Iteration", "Team", "TimeStamp", "Username", "RallyId", "StoryName",
-// "Hours", "Type" };
-
 public class GoogleDocService {
 
-	private static final String SPREADSHEET_KEY = (String) Play.configuration
-			.getProperty("spreadsheet.key", "");
-	private static final String WORKSHEET = (String) Play.configuration
-			.getProperty("worksheet.name", "");
+	private static final String ITERATION = "Iteration";
+	private static final String TEAM = "Team";
+	private static final String USER_NAME = "Username";
+	private static final String RALYY_ID = "RallyId";
+	private static final String TIME_STAMP = "TimeStamp";
+	private static final String STORY_NAME = "StoryName";
+	private static final String HOURS = "Hours";	
+	private static final String TYPE = "Type";	
 
+	private static final String SPREADSHEET_KEY = (String) Play.configuration
+			.getProperty("spreadsheet.key", "");	
+	
 	private static DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
 	private static FeedURLFactory urlFactory = FeedURLFactory.getDefault();
 	private static SpreadsheetService service;
+	private static String workSheetName;
 
-	public static ValidationResult saveReport(ReportFormBean report, String token)
-			throws IOException, ServiceException {
+	public static ValidationResult saveReport(ReportFormBean report,
+			String token) throws IOException, ServiceException {
 
 		boolean saveStoryTime;
 		ValidationResult saveResponse;
 		ReportFormValidator validator;
+		workSheetName = getIterationString();
 
 		validator = new ReportFormValidator();
 
@@ -63,30 +70,41 @@ public class GoogleDocService {
 		return saveResponse;
 	}
 
+	private static String getIterationString() {
+		int offsetIteration = 78;
+		long day = 24 * 60 * 60 * 1000;
+		
+		//09 December 2013 year
+		long startPoint = (new Date(2013-1900,11,9)).getTime();
+		long now = (new Date()).getTime();
+		
+		long millisFromStartPoint = now - startPoint;
+		long daysFromStartPoint = (millisFromStartPoint - millisFromStartPoint % day) / day;
+		long itersFromStartPoint = (daysFromStartPoint - daysFromStartPoint % 14) / 14;
+		long currentIteration = itersFromStartPoint + offsetIteration;
+
+		return "i" + currentIteration;
+	}
+
 	private static void save(ReportFormBean report, boolean saveStoryTime)
 			throws IOException, ServiceException {
 
 		ListEntry row;
-		URL workSheetUrl = findWorksheet(service).getListFeedUrl();
+		URL workSheetUrl = findOrCreateWorksheet(service).getListFeedUrl();
 
 		// save all parameters
 		saveRowEntry(workSheetUrl, report, report.rework, "Rework");
 		saveRowEntry(workSheetUrl, report, report.maintenance, "Maintenance");
-		saveRowEntry(workSheetUrl, report, report.unplannedActivity,
-				"Unplanned Activity");
+		saveRowEntry(workSheetUrl, report, report.unplannedActivity, "Unplanned Activity");
 		saveRowEntry(workSheetUrl, report, report.sickLeave, "Sick Leave");
 		saveRowEntry(workSheetUrl, report, report.vacation, "Vacation");
 		saveRowEntry(workSheetUrl, report, report.standUp, "Stand Up");
-		saveRowEntry(workSheetUrl, report, report.retrospective,
-				"Retrospective");
-		saveRowEntry(workSheetUrl, report, report.projectPlanning,
-				"Project Planning");
+		saveRowEntry(workSheetUrl, report, report.retrospective, "Retrospective");
+		saveRowEntry(workSheetUrl, report, report.projectPlanning, "Project Planning");
 		saveRowEntry(workSheetUrl, report, report.demo, "Demo");
 		saveRowEntry(workSheetUrl, report, report.estimates, "Estimates");
-		saveRowEntry(workSheetUrl, report, report.projectMeetings,
-				"Project Meetings");
-		saveRowEntry(workSheetUrl, report, report.trainingAndDevelopment,
-				"Training and development");
+		saveRowEntry(workSheetUrl, report, report.projectMeetings, "Project Meetings");
+		saveRowEntry(workSheetUrl, report, report.trainingAndDevelopment, "Training and development");
 		saveRowEntry(workSheetUrl, report, report.management, "Management");
 
 		// save story time parameter
@@ -105,11 +123,12 @@ public class GoogleDocService {
 			String hoursValue, String activityType) {
 		ListEntry row = new ListEntry();
 
-		row.getCustomElements().setValueLocal("Username", report.mail);
-		row.getCustomElements().setValueLocal("Team", report.team);
-		row.getCustomElements().setValueLocal("TimeStamp", getDate());
-		row.getCustomElements().setValueLocal("Hours", hoursValue);
-		row.getCustomElements().setValueLocal("Type", activityType);
+		row.getCustomElements().setValueLocal(USER_NAME, report.mail);
+		row.getCustomElements().setValueLocal(TEAM, report.team);
+		row.getCustomElements().setValueLocal(TIME_STAMP, getDate());
+		row.getCustomElements().setValueLocal(HOURS, hoursValue);
+		row.getCustomElements().setValueLocal(TYPE, activityType);
+		row.getCustomElements().setValueLocal(ITERATION, workSheetName);
 
 		return row;
 	}
@@ -117,14 +136,14 @@ public class GoogleDocService {
 	private static ListEntry createStoryTimeEntry(ReportFormBean report) {
 		ListEntry row = new ListEntry();
 
-		row.getCustomElements().setValueLocal("Username", report.mail);
-		row.getCustomElements().setValueLocal("Team", report.team);
-		row.getCustomElements().setValueLocal("TimeStamp", getDate());
-		row.getCustomElements().setValueLocal("Hours", report.storyTime);
-		row.getCustomElements().setValueLocal("RallyId", report.usId);
-		row.getCustomElements().setValueLocal("StoryName", report.usName);
-		row.getCustomElements().setValueLocal("Type", "Story Time");
-
+		row.getCustomElements().setValueLocal(USER_NAME, report.mail);
+		row.getCustomElements().setValueLocal(TEAM, report.team);
+		row.getCustomElements().setValueLocal(TIME_STAMP, getDate());
+		row.getCustomElements().setValueLocal(HOURS, report.storyTime);
+		row.getCustomElements().setValueLocal(RALYY_ID, report.usId);
+		row.getCustomElements().setValueLocal(STORY_NAME, report.usName);
+		row.getCustomElements().setValueLocal(TYPE, "Story Time");
+		row.getCustomElements().setValueLocal(ITERATION, workSheetName);
 		return row;
 	}
 
@@ -135,23 +154,73 @@ public class GoogleDocService {
 		return service;
 	}
 
-	private static WorksheetEntry findWorksheet(SpreadsheetService service)
-			throws IOException, ServiceException {
+	private static WorksheetEntry findOrCreateWorksheet(
+			SpreadsheetService service) throws IOException, ServiceException {
 
 		SpreadsheetFeed feed = service.getFeed(
 				urlFactory.getSpreadsheetsFeedUrl(), SpreadsheetFeed.class);
-		for (SpreadsheetEntry se : feed.getEntries()) {
-			if (se.getSpreadsheetLink().getHref().endsWith(SPREADSHEET_KEY)) {
-				for (WorksheetEntry we : se.getWorksheets()) {
-					if (we.getTitle().getPlainText()
-							.equalsIgnoreCase(WORKSHEET)) {
-						return we;
+		for (SpreadsheetEntry spreadsheet : feed.getEntries()) {
+			if (spreadsheet.getSpreadsheetLink().getHref()
+					.endsWith(SPREADSHEET_KEY)) {
+				for (WorksheetEntry worksheet : spreadsheet.getWorksheets()) {
+					if (worksheet.getTitle().getPlainText()
+							.equalsIgnoreCase(workSheetName)) {
+						writeHeader(service, worksheet);
+						return worksheet;
 					}
 				}
+			    return createReportWorksheet(service, spreadsheet);
 			}
 		}
 
 		return null;
+	}
+
+	private static WorksheetEntry createReportWorksheet(
+			SpreadsheetService service, SpreadsheetEntry spreadsheet)
+			throws IOException, ServiceException {
+		WorksheetEntry worksheet = new WorksheetEntry();
+		worksheet.setTitle(new PlainTextConstruct(workSheetName));
+		worksheet.setColCount(10);
+		worksheet.setRowCount(10);
+		
+		URL worksheetFeedUrl = spreadsheet.getWorksheetFeedUrl();
+		worksheet = service.insert(worksheetFeedUrl, worksheet);
+	
+		writeHeader(service, worksheet);
+
+		return worksheet;
+	}
+	
+	// names of headers in spreadsheet
+	// don't use white spaces in this names and headers names in spreadsheet
+	// Also you need to create google spreadsheet with HEADER ROW labeled by the
+	// following captions
+	// { "Iteration", "Team", "TimeStamp", "Username", "RallyId", "StoryName",
+	// "Hours", "Type" };
+	//Do not 
+	private static void writeHeader(SpreadsheetService service,
+			WorksheetEntry worksheet) throws IOException, ServiceException {
+		URL cellFeedUrl = worksheet.getCellFeedUrl();
+		CellFeed cellFeed =  service.getFeed(cellFeedUrl, CellFeed.class);
+		CellEntry cellEntry;
+		
+		cellEntry = new CellEntry(1, 1, ITERATION);
+		cellFeed.insert(cellEntry);
+		cellEntry = new CellEntry(1, 2, TEAM);
+		cellFeed.insert(cellEntry);
+		cellEntry = new CellEntry(1, 3, TIME_STAMP);
+		cellFeed.insert(cellEntry);
+		cellEntry = new CellEntry(1, 4, USER_NAME);
+		cellFeed.insert(cellEntry);
+		cellEntry = new CellEntry(1, 5, RALYY_ID);
+		cellFeed.insert(cellEntry);
+		cellEntry = new CellEntry(1, 6, STORY_NAME);
+		cellFeed.insert(cellEntry);
+		cellEntry = new CellEntry(1, 7, HOURS);
+		cellFeed.insert(cellEntry);
+		cellEntry = new CellEntry(1, 8, TYPE);
+		cellFeed.insert(cellEntry);
 	}
 
 	private static boolean saveRowEntry(URL workSheetUrl,
