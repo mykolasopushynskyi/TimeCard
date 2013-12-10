@@ -35,11 +35,11 @@ public class GoogleDocService {
 	private static final String ITERATION = "Iteration";
 	private static final String TEAM = "Team";
 	private static final String USER_NAME = "Username";
-	private static final String RALYY_ID = "RallyId";
-	private static final String TIME_STAMP = "TimeStamp";
-	private static final String STORY_NAME = "StoryName";
-	private static final String HOURS = "Hours";	
-	private static final String TYPE = "Type";	
+	private static final String RALYY_ID = "Rally ID";
+	private static final String TIME_STAMP = "Timestamp";
+	private static final String STORY_NAME = "Story name";
+	private static final String HOURS = "Hours";
+	private static final String TYPE = "Type";
 
 	private static final String SPREADSHEET_KEY = (String) Play.configuration
 			.getProperty("spreadsheet.key", "");	
@@ -66,15 +66,15 @@ public class GoogleDocService {
 			service = getSpreadsheetService(token);
 			save(report, saveStoryTime);
 		}
-
+		
 		return saveResponse;
 	}
 
+	//09 December 2013 year begins 78 iteration
 	private static String getIterationString() {
 		int offsetIteration = 78;
 		long day = 24 * 60 * 60 * 1000;
 		
-		//09 December 2013 year
 		long startPoint = (new Date(2013-1900,11,9)).getTime();
 		long now = (new Date()).getTime();
 		
@@ -123,12 +123,12 @@ public class GoogleDocService {
 			String hoursValue, String activityType) {
 		ListEntry row = new ListEntry();
 
-		row.getCustomElements().setValueLocal(USER_NAME, report.mail);
-		row.getCustomElements().setValueLocal(TEAM, report.team);
-		row.getCustomElements().setValueLocal(TIME_STAMP, getDate());
-		row.getCustomElements().setValueLocal(HOURS, hoursValue);
-		row.getCustomElements().setValueLocal(TYPE, activityType);
-		row.getCustomElements().setValueLocal(ITERATION, workSheetName);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(USER_NAME), report.mail);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TEAM), report.team);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), getDate());
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(HOURS), hoursValue);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TYPE), activityType);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(ITERATION), workSheetName);
 
 		return row;
 	}
@@ -136,14 +136,14 @@ public class GoogleDocService {
 	private static ListEntry createStoryTimeEntry(ReportFormBean report) {
 		ListEntry row = new ListEntry();
 
-		row.getCustomElements().setValueLocal(USER_NAME, report.mail);
-		row.getCustomElements().setValueLocal(TEAM, report.team);
-		row.getCustomElements().setValueLocal(TIME_STAMP, getDate());
-		row.getCustomElements().setValueLocal(HOURS, report.storyTime);
-		row.getCustomElements().setValueLocal(RALYY_ID, report.usId);
-		row.getCustomElements().setValueLocal(STORY_NAME, report.usName);
-		row.getCustomElements().setValueLocal(TYPE, "Story Time");
-		row.getCustomElements().setValueLocal(ITERATION, workSheetName);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(USER_NAME), report.mail);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TEAM), report.team);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), getDate());
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(HOURS), report.storyTime);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(RALYY_ID), report.usId);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(STORY_NAME), report.usName);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TYPE), "Story Time");
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(ITERATION), workSheetName);
 		return row;
 	}
 
@@ -191,14 +191,17 @@ public class GoogleDocService {
 
 		return worksheet;
 	}
+
+	// For google API query to write data in column with HEADER ROW
+	// you must write header of specified column 
+	// without white spaces and lower case!!!
+	private static String headerToGoogleAPI(String columnHeader) {
+		return StringUtils.deleteWhitespace(columnHeader).toLowerCase();
+	}
 	
-	// names of headers in spreadsheet
-	// don't use white spaces in this names and headers names in spreadsheet
-	// Also you need to create google spreadsheet with HEADER ROW labeled by the
-	// following captions
-	// { "Iteration", "Team", "TimeStamp", "Username", "RallyId", "StoryName",
-	// "Hours", "Type" };
-	//Do not 
+	// Writes names of headers in spreadsheet
+	// User need to create google spreadsheet with HEADER ROW labeled by the
+	// following captions!!!
 	private static void writeHeader(SpreadsheetService service,
 			WorksheetEntry worksheet) throws IOException, ServiceException {
 		URL cellFeedUrl = worksheet.getCellFeedUrl();
