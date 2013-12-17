@@ -43,8 +43,7 @@ public class GoogleDocService {
 
 	private static final String SPREADSHEET_KEY = (String) Play.configuration
 			.getProperty("spreadsheet.key", "");	
-	
-	private static DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+
 	private static FeedURLFactory urlFactory = FeedURLFactory.getDefault();
 	private static SpreadsheetService service;
 	private static String workSheetName;
@@ -114,18 +113,13 @@ public class GoogleDocService {
 		}
 	}
 
-	public static String getDate() {
-		Calendar calendar = Calendar.getInstance();
-		return dateFormat.format(calendar.getTime());
-	}
-
 	private static ListEntry createRowEntry(ReportFormBean report,
 			String hoursValue, String activityType) {
 		ListEntry row = new ListEntry();
 
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(USER_NAME), report.mail);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(TEAM), report.team);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), getDate());
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), report.reportDate);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(HOURS), hoursValue);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(TYPE), activityType);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(ITERATION), workSheetName);
@@ -138,7 +132,7 @@ public class GoogleDocService {
 
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(USER_NAME), report.mail);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(TEAM), report.team);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), getDate());
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), report.reportDate);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(HOURS), report.storyTime);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(RALYY_ID), report.usId);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(STORY_NAME), report.usName);

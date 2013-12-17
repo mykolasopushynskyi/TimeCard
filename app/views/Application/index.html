@@ -23,13 +23,12 @@
 </div>
 
 <div id="content">
-        <h1>Options</h1>
+        <h1>Report</h1>
 
         <form id="mainform" method="post" action="saveData">
                 <div class="frm">
                     <div id="overselector">
-                        <select
-                                data-bind="options: $root.chosenTeam().storyList(), optionsText: 
+                        <select data-bind="options: $root.chosenTeam().storyList(), optionsText: 
                         function(item)
                         {
                                 return item.id + ' ' + item.desc;
@@ -40,26 +39,28 @@
                         <input id="opener" class="button" type="button"
                                 value="Find user story" />
                 </div>
-                <div>
-                        <table data-bind="foreach: reportEntries">
-                                <tr>
-                                        <td data-bind="text: description"></td>
-                                        <td><input
-                                                data-bind="value: $root.chosenTeam().report[name], 
-                                                css: { errorField: isNotValid($root.chosenTeam().report[name]())}"
-                                                type="text" /></td>
-                                </tr>
-                        </table>
-                        
-                        <div data-bind="text: $root.summaryValid()" id="validationWarning"
-                                class="warningMessage"></div>
-                        <div data-bind="text: $root.summaryValid()" id="validationError"
-                                class="errorMessage"></div>
-                        <div data-bind="text: $root.respMessage()" id="successMessage"
-                                class="successMessage"></div>
-                        <div data-bind="text: $root.respMessage()" id="errorMessage"
-                                class="errorMessage"></div>
+                <div class="fieldList">
+						<p>
+							<label>Reporting date</label>
+							<input type="text" id="datepicker" data-bind="value: $root.chosenTeam().reportDate">
+						</p>
+                        <!-- ko foreach: reportEntries -->
+	                    <p>
+	                        <label data-bind="text: description"></label>
+	                        <input type="text" data-bind="value: $root.chosenTeam().report[name], 
+	                        	css: { errorField: isNotValid($root.chosenTeam().report[name]())}" >
+	                     </p>
+                         <!-- /ko -->
                 </div>
+                        
+                <div data-bind="text: $root.summaryValid()" id="validationWarning"
+                        class="warningMessage"></div>
+                <div data-bind="text: $root.summaryValid()" id="validationError"
+                        class="errorMessage"></div>
+                <div data-bind="text: $root.respMessage()" id="successMessage"
+                        class="successMessage"></div>
+                <div data-bind="text: $root.respMessage()" id="errorMessage"
+                        class="errorMessage"></div>
 
                 <div class="buttons">
                         <input data-bind="click: clearFields" class="button" type="button"
@@ -106,6 +107,10 @@
 	                }
                 #{/if}
                 
+             	$(function() {
+             		$( "#datepicker" ).datepicker();
+             	});
+                
 				var isNotValid = function(value) {
                         var isValid = true;
                         if (value != "") {
@@ -115,6 +120,32 @@
                         }
                         return !isValid;
                 }
+				
+				var validateDate = function(dateString)
+				{
+				    // First check for the pattern
+				    if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString))
+				        return false;
+
+				    // Parse the date parts to integers
+				    var parts = dateString.split("/");
+				    var day = parseInt(parts[1], 10);
+				    var month = parseInt(parts[0], 10);
+				    var year = parseInt(parts[2], 10);
+
+				    // Check the ranges of month and year
+				    if(year < 1000 || year > 3000 || month == 0 || month > 12)
+				        return false;
+
+				    var monthLength = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
+
+				    // Adjust for leap years
+				    if(year % 400 == 0 || (year % 100 != 0 && year % 4 == 0))
+				        monthLength[1] = 29;
+
+				    // Check the range of the day
+				    return day > 0 && day <= monthLength[month - 1];
+				}
 
                 var createReportEntry = function(name, description) {
                         return {
@@ -152,8 +183,9 @@
                 var createTeamModel = function(name) {
                         return {
                                 name : name,
-                                storyList : ko.observable([]),
                                 story : ko.observable({}),
+                                storyList : ko.observable([]),
+                                reportDate:  ko.observable(""),
                                 report : createReportModel(reportEntries)
                         };
                 }
@@ -178,8 +210,12 @@
 
                         self.summaryValid = ko.computed(function() {
 	                        var rep = self.chosenTeam().report;
+	                        var date = self.chosenTeam().reportDate();
 	                        var isValid = true;
-	
+	                        var isValidDate = true;
+
+	                        isValidDate = validateDate(date);
+
 	                        for (i in rep)
 	                                isValid = isValid && !isNotValid(rep[i]());
 	
@@ -193,42 +229,52 @@
 	                                        sum += x;
 	                        }
 	                        
-	                        if (!isValid) {
-	                                self.isValid(false);
-	                                $("#validationWarning").hide(500);
-	                                $("#validationError").show(500);
-	                                return "Not all fiels is valid!";
+	                        if (date == "" && sum != 0){ 
+	                            self.isValid(false);
+	                            $("#validationWarning").hide(500);
+	                            $("#validationError").show(500);
+	                            return "Schoose reporting date to save report!";
+	                        } else if (!isValidDate && (sum != 0 || date != "")){ 
+	                            self.isValid(false);
+	                            $("#validationWarning").hide(500);
+	                            $("#validationError").show(500);
+	                            return "Reporting date is invalid!";
+	                        } else if (!isValid) {
+                                self.isValid(false);
+                                $("#validationWarning").hide(500);
+                                $("#validationError").show(500);
+                                return "Not all fiels is valid!";
 	                        } else if (sum > 24) {
-	                                self.isValid(false);
-	                                $("#validationWarning").hide(500);
-	                                $("#validationError").show(500);
-	                                message = sum + " hours spended. You cant work more than 24 hours.";                                        
+                                self.isValid(false);
+                                $("#validationWarning").hide(500);
+                                $("#validationError").show(500);
+                                message = sum + " hours spended. You cant work more than 24 hours.";                                        
 	                        } else if (self.chosenTeam().story() != undefined
-	                                                && self.chosenTeam().report != undefined
-	                                                && self.chosenTeam().story().id == "-"
-	                                                && self.chosenTeam().report["storyTime"]() != "") {
-	                                        self.isValid(false);
-	                                        $("#validationWarning").hide(500);
-	                                        $("#validationError").show(500);
-	                                        message = "Choose userstory to save story time.";
+                                        && self.chosenTeam().report != undefined
+                                        && self.chosenTeam().story().id == "-"
+                                        && self.chosenTeam().report["storyTime"]() != "") {
+                                self.isValid(false);
+                                $("#validationWarning").hide(500);
+                                $("#validationError").show(500);
+                                message = "Choose userstory to save story time.";
 	                        } else if (sum > 8 && sum <= 24) {
-	                                self.isValid(true);
-	                                $("#validationError").hide(500);
-	                                $("#validationWarning").show(500);
-	                                message = "Are you really work " + sum + " hours?";
+                                self.isValid(true);
+                                $("#validationError").hide(500);
+                                $("#validationWarning").show(500);
+                                message = "Are you really work " + sum + " hours?";
 	                        } else if (sum < 8 && sum != 0) {
-	                                self.isValid(true);
-	                                $("#validationError").hide(500);
-	                                $("#validationWarning").show(500);
-	                                message = sum + " hours spent. Maybe you need more work.";
+                                self.isValid(true);
+                                $("#validationError").hide(500);
+                                $("#validationWarning").show(500);
+                                message = sum + " hours spent. Maybe you need more work.";
 	                        } else if (sum == 0) {
-	                                self.isValid(false);
-	                                $("#validationError").hide(500);
-	                                $("#validationWarning").hide(500);
+                                self.isValid(false);
+                                $("#validationError").hide(500);
+                                $("#validationWarning").hide(500);
 	                        } else {
-	                                self.isValid(true);
-	                                $("#validationError").hide(500);
-	                                $("#validationWarning").hide(500);
+                                self.isValid(true);
+                                $("#validationError").hide(500);
+                                $("#validationWarning").hide(500);
 	                        }
 	                        return message;
 	                	});
@@ -289,6 +335,7 @@
                                 finalReport.team = self.chosenTeam().name;
                                 finalReport.usId = self.chosenTeam().story().id;
                                 finalReport.usName = self.chosenTeam().story().desc;
+                                finalReport.reportDate = self.chosenTeam().reportDate();
 
                                 for (i in self.chosenTeam().report) {
                                         if (self.chosenTeam().report.hasOwnProperty(i))
@@ -314,7 +361,7 @@
                                         		if(xhr.status == 200) {
                                                     $("#errorMessage").hide(500);
                                                     $("#successMessage").show(500).delay(10000).hide(500);
-                                        		}else{
+                                        		} else {
                                                     $("#successMessage").hide(500);
                                                     $("#errorMessage").show(500).delay(10000).hide(500);
                                         		}
@@ -327,7 +374,7 @@
 
                         self.clearFields = function() {
                                 var rep = self.chosenTeam().report;
-
+                                self.chosenTeam().reportDate("");
                                 for ( var param in rep) {
                                         if (rep.hasOwnProperty(param)) {
                                                 rep[param]("");
@@ -337,13 +384,13 @@
 
                         //set new team and refresh US list
                         self.chooseTeam = function(teamModel) {
-                                //kostyl'
-                                var id;
-                                if (teamModel.story() != undefined)
-                                        id = teamModel.story().id;
+                        	//Fix for right selector work
+                            var id;
+                            if (teamModel.story() != undefined)
+                                    id = teamModel.story().id;
                                 
-                                self.chosenTeam(teamModel);
-                                self.updateUSList(id);
+                            self.chosenTeam(teamModel);
+                            self.updateUSList(id);
                         }
 
                         //JS dialog to find user story from rally
@@ -508,7 +555,7 @@
                                 src="https://www.globallogic.com/wp-content/themes/globallogic/img/logo.png"
                                 width="106" height="18" alt="GlobalLogic logo" />
                 </div>
-                <div class="info">Reporting date: ${date}</div>
+                <div class="info">Current date: ${date}</div>
         </div>
         
         
@@ -547,7 +594,7 @@
                                 src="https://www.globallogic.com/wp-content/themes/globallogic/img/logo.png"
                                 width="106" height="18" alt="GlobalLogic logo" />
                 </div>
-                <div class="info">${date}</div>
+                <div class="info">Current date: ${date}</div>
         </div>
 </div>
 #{/else}

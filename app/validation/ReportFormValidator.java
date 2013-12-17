@@ -1,7 +1,10 @@
 package validation;
 
 import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,30 +43,53 @@ public class ReportFormValidator extends FormValidator<ReportFormBean> {
 		ValidationResult saveResult = new ValidationResult();
 
 		String resultText = null;
-
-		if (isValidMail(report.mail)) {
-			if (validateFields(report)) {
-				if (validateReportHours(report)) {
-					if (!StringUtils.isBlank(report.storyTime)) {
-						if (!validateStoryTime(report.storyTime, report.usId,
-								report.usName)) {
-							resultText = "Server: Can't save story time";
+		if (isValidReportDate(report.reportDate,"MM/dd/yyyy")) {
+			if (isValidMail(report.mail)) {
+				if (validateFields(report)) {
+					if (validateReportHours(report)) {
+						if (!StringUtils.isBlank(report.storyTime)) {
+							if (!validateStoryTime(report.storyTime, report.usId,
+									report.usName)) {
+								resultText = "Server: Can't save story time";
+							}
 						}
+					} else {
+						resultText = "Server: Hours sum validation failed.";
 					}
 				} else {
-					resultText = "Server: Hours sum validation failed.";
+					resultText = "Server: Not all fiels is valid.";
 				}
 			} else {
-				resultText = "Server: Not all fiels is valid.";
+				resultText = "Server: Email is invalid";
 			}
 		} else {
-			resultText = "Server: Email is invalid";
+			resultText = "Server: Report date is invalid";
 		}
 		if (resultText != null)
 			saveResult.addGlobalError(resultText);
 		return saveResult;
 	}
+	
+	public boolean isValidReportDate(String dateToValidate, String dateFromat){
+		
+		if(dateToValidate == null){
+			return false;
+		}
 
+		SimpleDateFormat sdf = new SimpleDateFormat(dateFromat);
+		sdf.setLenient(false);
+ 
+		try {
+			//if not valid, it will throw ParseException
+			sdf.parse(dateToValidate);
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return false;
+		}
+ 
+		return true;
+	}
+	
 	private boolean validateFields(ReportFormBean report) {
 		boolean isValid = true;
 

@@ -19,9 +19,8 @@
 		endColorstr= '#6bba70', GradientType= 1); /* IE6-9 */
 }
 
-#content table {
-	float: left;
-	padding: 10px;
+#content p {
+	margin: 7px 0;
 }
 
 #content input {
@@ -98,16 +97,23 @@ select {
 	font-size: 14px;
 }
 
-#content td {
+#mainform label {
+	display: inline-block;
+	width: 220px;
 	text-align: right;
-	letter-spacing: 1px;
+	padding-right: 10px;
 	font-size: 16px;
 	line-height: 20px;
+	letter-spacing: 1px;
 	padding-left: 10px;
 	color: rgba(255, 255, 255, 0.9);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+#content .fieldList {
+	float:left;
 }
 
 #content .login {

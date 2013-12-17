@@ -8,6 +8,7 @@ public class ReportFormBean implements FormBean{
 	public String storyTime;
 	public String usId;
 	public String usName;
+	public String reportDate;
 	
 	public String rework;
 	public String maintenance;
@@ -25,6 +26,7 @@ public class ReportFormBean implements FormBean{
 
 	public String toString() {
 		String rez = "";
+		rez += "reportDate " + reportDate + " \n";
 		rez += "storyTime " + storyTime + " \n";
 		rez += "usId " + usId  + " \n";
 		rez += "usName " + usName  + " \n";

@@ -1,5 +1,8 @@
 package controllers;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import play.Play;
@@ -11,14 +14,17 @@ import services.GoogleDocService;
 public class Application extends Controller {
 
 	public static void index() {
-
+		
+		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+		Calendar calendar = Calendar.getInstance();
+		
 		if (Security.isLogged()) {
 			String email = Security.getUserInfo();
 			boolean isLogged = true;
 			
 			String support = (String) Play.configuration.getProperty("multimedia.support","false");
 			boolean multimediaSupport = Boolean.parseBoolean(support);
-			String date = GoogleDocService.getDate();
+			String date =  dateFormat.format(calendar.getTime());
 			render( email, isLogged, multimediaSupport, date);
 		}
 		render();
