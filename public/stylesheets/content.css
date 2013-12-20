@@ -27,10 +27,17 @@
 	height: 30px;
 	border: 0;
 	color: rgba(255, 255, 255, 0.9);
-	background: #45774C;
 	font-size: 16px;
 	padding-left: 5px;
 	width: 180px;
+	background: #45774C;
+	/* background: url(/public/images/calendar.ico) no-repeat right #45774C;
+	background-size:24px 24px; */
+}
+
+#content .myInput{
+	background: url(/public/images/calendar.ico) no-repeat right #45774C;
+	background-size:24px 24px;
 }
 
 select {

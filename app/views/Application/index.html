@@ -42,15 +42,17 @@
                 <div class="fieldList">
 						<p>
 							<label>Reporting date</label>
-							<input type="text" id="datepicker" data-bind="value: $root.chosenTeam().reportDate">
+							<input type="text" id="datepicker" data-bind="value: $root.chosenTeam().reportDate" class="myInput">
 						</p>
+						
                         <!-- ko foreach: reportEntries -->
 	                    <p>
 	                        <label data-bind="text: description"></label>
 	                        <input type="text" data-bind="value: $root.chosenTeam().report[name], 
-	                        	css: { errorField: isNotValid($root.chosenTeam().report[name]())}" >
+	                        	css: { errorField: isNotValid($root.chosenTeam().report[name]())}">
 	                     </p>
                          <!-- /ko -->
+                         
                 </div>
                         
                 <div data-bind="text: $root.summaryValid()" id="validationWarning"
@@ -185,7 +187,7 @@
                                 name : name,
                                 story : ko.observable({}),
                                 storyList : ko.observable([]),
-                                reportDate:  ko.observable(""),
+                                reportDate:  ko.observable("${date}"),
                                 report : createReportModel(reportEntries)
                         };
                 }
@@ -224,13 +226,13 @@
 	                        var message = "";
 	
 	                        for (i in rep) {
-	                                x = parseFloat(rep[i]());
-	                                if (!isNaN(x))
-	                                        sum += x;
+                                x = parseFloat(rep[i]());
+                                if (!isNaN(x))
+                                	sum += x;
 	                        }
 	                        
 	                        if (date == "" && sum != 0){ 
-	                            self.isValid(false);
+	                        	self.isValid(false);
 	                            $("#validationWarning").hide(500);
 	                            $("#validationError").show(500);
 	                            return "Schoose reporting date to save report!";
@@ -374,7 +376,7 @@
 
                         self.clearFields = function() {
                                 var rep = self.chosenTeam().report;
-                                self.chosenTeam().reportDate("");
+                                self.chosenTeam().reportDate("${date}");
                                 for ( var param in rep) {
                                         if (rep.hasOwnProperty(param)) {
                                                 rep[param]("");
