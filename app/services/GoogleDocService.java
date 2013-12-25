@@ -52,6 +52,8 @@ public class GoogleDocService {
 			String token) throws IOException, ServiceException {
 
 		boolean saveStoryTime;
+		boolean saveDefectOrUserStory;
+		
 		ValidationResult saveResponse;
 		ReportFormValidator validator;
 		workSheetName = getIterationString();
@@ -59,11 +61,12 @@ public class GoogleDocService {
 		validator = new ReportFormValidator();
 
 		saveStoryTime = validator.saveStoryTime(report);
+		saveDefectOrUserStory = validator.saveDefectOrUserStory(report);
 		saveResponse = validator.validateFormBean(report);
 
 		if (!saveResponse.hasErrors()) {
 			service = getSpreadsheetService(token);
-			save(report, saveStoryTime);
+			save(report, saveStoryTime, saveDefectOrUserStory);
 		}
 		
 		return saveResponse;
@@ -71,12 +74,10 @@ public class GoogleDocService {
 
 	//09 December 2013 year begins 78 iteration
 	private static String getIterationString() {
-		int offsetIteration = 78;
+		long offsetIteration = 78;
 		long day = 24 * 60 * 60 * 1000;
-		
 		long startPoint = (new Date(2013-1900,11,9)).getTime();
 		long now = (new Date()).getTime();
-		
 		long millisFromStartPoint = now - startPoint;
 		long daysFromStartPoint = (millisFromStartPoint - millisFromStartPoint % day) / day;
 		long itersFromStartPoint = (daysFromStartPoint - daysFromStartPoint % 14) / 14;
@@ -85,60 +86,64 @@ public class GoogleDocService {
 		return "i" + currentIteration;
 	}
 
-	private static void save(ReportFormBean report, boolean saveStoryTime)
+	private static void save(ReportFormBean report, boolean saveStoryTime, boolean saveDefectOrUserStory)
 			throws IOException, ServiceException {
 
-		ListEntry row;
 		URL workSheetUrl = findOrCreateWorksheet(service).getListFeedUrl();
 
-		// save all parameters
-		saveRowEntry(workSheetUrl, report, report.rework, "Rework");
-		saveRowEntry(workSheetUrl, report, report.maintenance, "Maintenance");
-		saveRowEntry(workSheetUrl, report, report.unplannedActivity, "Unplanned Activity");
-		saveRowEntry(workSheetUrl, report, report.sickLeave, "Sick Leave");
-		saveRowEntry(workSheetUrl, report, report.vacation, "Vacation");
-		saveRowEntry(workSheetUrl, report, report.standUp, "Stand Up");
-		saveRowEntry(workSheetUrl, report, report.retrospective, "Retrospective");
-		saveRowEntry(workSheetUrl, report, report.projectPlanning, "Project Planning");
-		saveRowEntry(workSheetUrl, report, report.demo, "Demo");
-		saveRowEntry(workSheetUrl, report, report.estimates, "Estimates");
-		saveRowEntry(workSheetUrl, report, report.projectMeetings, "Project Meetings");
-		saveRowEntry(workSheetUrl, report, report.trainingAndDevelopment, "Training and development");
-		saveRowEntry(workSheetUrl, report, report.management, "Management");
+		saveRowEntry(workSheetUrl, report, report.rework, "Rework", saveDefectOrUserStory);
+		saveRowEntry(workSheetUrl, report, report.maintenance, "Maintenance", saveDefectOrUserStory);
+		saveRowEntry(workSheetUrl, report, report.unplannedActivity, "Unplanned Activity", saveDefectOrUserStory);
 
+		// save all parameters
+		saveRowEntry(workSheetUrl, report, report.sickLeave, "Sick Leave", false);
+		saveRowEntry(workSheetUrl, report, report.vacation, "Vacation", false);
+		saveRowEntry(workSheetUrl, report, report.standUp, "Stand Up", false);
+		saveRowEntry(workSheetUrl, report, report.retrospective, "Retrospective", false);
+		saveRowEntry(workSheetUrl, report, report.projectPlanning, "Project Planning", false);
+		saveRowEntry(workSheetUrl, report, report.demo, "Demo", false);
+		saveRowEntry(workSheetUrl, report, report.estimates, "Estimates", false);
+		saveRowEntry(workSheetUrl, report, report.projectMeetings, "Project Meetings", false);
+		saveRowEntry(workSheetUrl, report, report.trainingAndDevelopment, "Training and development", false);
+		saveRowEntry(workSheetUrl, report, report.management, "Management", false);
+		
 		// save story time parameter
 		if (saveStoryTime) {
-			row = createStoryTimeEntry(report);
-			row = service.insert(workSheetUrl, row);
+			saveRowEntry(workSheetUrl, report, report.storyTime, "Story Time", saveStoryTime);
 		}
 	}
 
 	private static ListEntry createRowEntry(ReportFormBean report,
-			String hoursValue, String activityType) {
+			 String activityType, String activityTime, boolean saveStoryInfo) {
 		ListEntry row = new ListEntry();
-
+		
+		if(saveStoryInfo) {
+			row.getCustomElements().setValueLocal(headerToGoogleAPI(RALYY_ID), report.usId);
+			row.getCustomElements().setValueLocal(headerToGoogleAPI(STORY_NAME), report.usName);
+		}
+		
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(USER_NAME), report.mail);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(TEAM), report.team);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(TEAM), StringUtils.capitalize(report.team));
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), report.reportDate);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(HOURS), hoursValue);
+		row.getCustomElements().setValueLocal(headerToGoogleAPI(HOURS), activityTime);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(TYPE), activityType);
 		row.getCustomElements().setValueLocal(headerToGoogleAPI(ITERATION), workSheetName);
 
 		return row;
 	}
+	
+	private static boolean saveRowEntry(URL workSheetUrl,
+			ReportFormBean report, String activityTime, String activityType, boolean saveStoryInfo)
+			throws IOException, ServiceException {
 
-	private static ListEntry createStoryTimeEntry(ReportFormBean report) {
-		ListEntry row = new ListEntry();
-
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(USER_NAME), report.mail);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(TEAM), report.team);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(TIME_STAMP), report.reportDate);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(HOURS), report.storyTime);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(RALYY_ID), report.usId);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(STORY_NAME), report.usName);
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(TYPE), "Story Time");
-		row.getCustomElements().setValueLocal(headerToGoogleAPI(ITERATION), workSheetName);
-		return row;
+		ListEntry row;
+		if (!StringUtils.isBlank(activityTime)) {
+			row = createRowEntry(report, activityType, activityTime, saveStoryInfo);
+			service.insert(workSheetUrl, row);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	private static SpreadsheetService getSpreadsheetService(String token) {
@@ -211,19 +216,4 @@ public class GoogleDocService {
 		cellFeed.insert(new CellEntry(1, 7, HOURS));
 		cellFeed.insert(new CellEntry(1, 8, TYPE));
 	}
-
-	private static boolean saveRowEntry(URL workSheetUrl,
-			ReportFormBean report, String hoursValue, String activityType)
-			throws IOException, ServiceException {
-
-		ListEntry row;
-		if (!StringUtils.isBlank(hoursValue)) {
-			row = createRowEntry(report, hoursValue, activityType);
-			service.insert(workSheetUrl, row);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 }

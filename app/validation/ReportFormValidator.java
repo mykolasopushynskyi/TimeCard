@@ -18,16 +18,13 @@ import play.mvc.Scope.Params;
 
 public class ReportFormValidator extends FormValidator<ReportFormBean> {
 
-	public boolean saveStoryTime(ReportFormBean form) {
-		ReportFormBean report = form;
-
+	public boolean saveStoryTime(ReportFormBean report) {
 		boolean saveStoryTime;
 
 		if (!StringUtils.isBlank(report.storyTime)) {
 			if (validateStoryTime(report.storyTime, report.usId, report.usName)) {
 				saveStoryTime = true;
 			} else {
-
 				saveStoryTime = false;
 			}
 		} else {
@@ -35,6 +32,18 @@ public class ReportFormValidator extends FormValidator<ReportFormBean> {
 		}
 
 		return saveStoryTime;
+	}
+	
+	public boolean saveDefectOrUserStory(ReportFormBean report) {
+		boolean saveDefectOrUserStory = false;
+		
+		if(!StringUtils.isBlank(report.usId) && !StringUtils.isBlank(report.usName)) {
+			if(report.usId.matches("(([uU][sS])|([dD][eE]))[0-9]+")) {
+				saveDefectOrUserStory = true;
+			}
+		} 
+
+		return saveDefectOrUserStory;
 	}
 
 	@Override
@@ -50,7 +59,7 @@ public class ReportFormValidator extends FormValidator<ReportFormBean> {
 						if (!StringUtils.isBlank(report.storyTime)) {
 							if (!validateStoryTime(report.storyTime, report.usId,
 									report.usName)) {
-								resultText = "Server: Can't save story time";
+								resultText = "Server: Can't save story time.";
 							}
 						}
 					} else {
@@ -178,7 +187,7 @@ public class ReportFormValidator extends FormValidator<ReportFormBean> {
 
 	private boolean isValidUserStoryId(String reallyId) {
 		if (reallyId != null) {
-			return reallyId.matches("(([uU][sS])|([dD][eE]))[0-9]+");
+			return reallyId.matches("([uU][sS])[0-9]+");
 		} else {
 			return false;
 		}
