@@ -20,10 +20,10 @@ public class Application extends Controller {
 		
 		if (Security.isLogged()) {
 			String email = Security.getUserInfo();
-			boolean isLogged = true;
 			
-			String support = (String) Play.configuration.getProperty("multimedia.support","false");
-			boolean multimediaSupport = Boolean.parseBoolean(support);
+			boolean isLogged = true;
+			boolean multimediaSupport = false;
+			
 			String date =  dateFormat.format(calendar.getTime());
 			render( email, isLogged, multimediaSupport, date);
 		}
