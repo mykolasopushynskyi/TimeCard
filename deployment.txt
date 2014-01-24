@@ -1,0 +1,26 @@
+To start working woth the project you need to:
+1) Clone repository from github to your folder with project:
+	git clone https://github.com/mykolasopushynskyi/TimeCard.git
+2) Copy file TimeCard/updateScript.sh to your folder with project
+	cd TimeCard/
+	cp updateTimeCard.sh ../updateScript.sh
+	cd ..
+3) Create mySQL db and remember connection options
+user
+password
+connection URL
+3) Open file TimeCard/conf/prod.conf and modify the next parametrs
+db.user
+db.pass
+db.url
+to enable connection with your db
+4) Modify the row "jpa.ddl=none" to "jpa.ddl=create" in file TimeCard/conf/prod.conf
+It is need to create db structure
+5) Run the updateScript.sh
+	sh updateScript.sh 
+It is need for initial start of project, downloading all dependencies, and creating db structure.
+6) After that you need top stop server using play stop command
+	play stop
+7) Modify the row "jpa.ddl=create" to "jpa.ddl=none" in file TimeCard/conf/prod.conf to cancel automatic recreation of database on each start of server.
+8) use play run command to start server.
+
